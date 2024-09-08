@@ -2,7 +2,6 @@ package main
 
 import (
     "log"
-    "os"
 
     "entgo.io/ent/entc"
     "entgo.io/ent/entc/gen"
