@@ -25,5 +25,6 @@ func (Event) Edges() []ent.Edge {
 		edge.From("created_by", User.Type).
 			Ref("events").
 			Unique(),
+		edge.To("posts", Post.Type),
 	}
 }

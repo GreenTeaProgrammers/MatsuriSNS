@@ -26,5 +26,7 @@ func (Post) Edges() []ent.Edge {
 			Ref("posts"),
 		edge.From("event", Event.Type).
 			Ref("posts"),
+		edge.To("images", PostImage.Type),
+		edge.To("reports", Report.Type),
 	}
 }
