@@ -11,9 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/event"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/eventadmin"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/post"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/predicate"
-	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/report"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/user"
 )
 
@@ -102,19 +102,19 @@ func (uu *UserUpdate) AddEvents(e ...*Event) *UserUpdate {
 	return uu.AddEventIDs(ids...)
 }
 
-// AddReportIDs adds the "reports" edge to the Report entity by IDs.
-func (uu *UserUpdate) AddReportIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddReportIDs(ids...)
+// AddEventAdminIDs adds the "event_admins" edge to the EventAdmin entity by IDs.
+func (uu *UserUpdate) AddEventAdminIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddEventAdminIDs(ids...)
 	return uu
 }
 
-// AddReports adds the "reports" edges to the Report entity.
-func (uu *UserUpdate) AddReports(r ...*Report) *UserUpdate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// AddEventAdmins adds the "event_admins" edges to the EventAdmin entity.
+func (uu *UserUpdate) AddEventAdmins(e ...*EventAdmin) *UserUpdate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
 	}
-	return uu.AddReportIDs(ids...)
+	return uu.AddEventAdminIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -164,25 +164,25 @@ func (uu *UserUpdate) RemoveEvents(e ...*Event) *UserUpdate {
 	return uu.RemoveEventIDs(ids...)
 }
 
-// ClearReports clears all "reports" edges to the Report entity.
-func (uu *UserUpdate) ClearReports() *UserUpdate {
-	uu.mutation.ClearReports()
+// ClearEventAdmins clears all "event_admins" edges to the EventAdmin entity.
+func (uu *UserUpdate) ClearEventAdmins() *UserUpdate {
+	uu.mutation.ClearEventAdmins()
 	return uu
 }
 
-// RemoveReportIDs removes the "reports" edge to Report entities by IDs.
-func (uu *UserUpdate) RemoveReportIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemoveReportIDs(ids...)
+// RemoveEventAdminIDs removes the "event_admins" edge to EventAdmin entities by IDs.
+func (uu *UserUpdate) RemoveEventAdminIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveEventAdminIDs(ids...)
 	return uu
 }
 
-// RemoveReports removes "reports" edges to Report entities.
-func (uu *UserUpdate) RemoveReports(r ...*Report) *UserUpdate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// RemoveEventAdmins removes "event_admins" edges to EventAdmin entities.
+func (uu *UserUpdate) RemoveEventAdmins(e ...*EventAdmin) *UserUpdate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
 	}
-	return uu.RemoveReportIDs(ids...)
+	return uu.RemoveEventAdminIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -217,6 +217,11 @@ func (uu *UserUpdate) check() error {
 	if v, ok := uu.mutation.Username(); ok {
 		if err := user.UsernameValidator(v); err != nil {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "User.username": %w`, err)}
+		}
+	}
+	if v, ok := uu.mutation.Email(); ok {
+		if err := user.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
 	if v, ok := uu.mutation.PasswordHash(); ok {
@@ -338,28 +343,28 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uu.mutation.ReportsCleared() {
+	if uu.mutation.EventAdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ReportsTable,
-			Columns: user.ReportsPrimaryKey,
+			Table:   user.EventAdminsTable,
+			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(report.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.RemovedReportsIDs(); len(nodes) > 0 && !uu.mutation.ReportsCleared() {
+	if nodes := uu.mutation.RemovedEventAdminsIDs(); len(nodes) > 0 && !uu.mutation.EventAdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ReportsTable,
-			Columns: user.ReportsPrimaryKey,
+			Table:   user.EventAdminsTable,
+			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(report.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -367,15 +372,15 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.ReportsIDs(); len(nodes) > 0 {
+	if nodes := uu.mutation.EventAdminsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ReportsTable,
-			Columns: user.ReportsPrimaryKey,
+			Table:   user.EventAdminsTable,
+			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(report.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -475,19 +480,19 @@ func (uuo *UserUpdateOne) AddEvents(e ...*Event) *UserUpdateOne {
 	return uuo.AddEventIDs(ids...)
 }
 
-// AddReportIDs adds the "reports" edge to the Report entity by IDs.
-func (uuo *UserUpdateOne) AddReportIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddReportIDs(ids...)
+// AddEventAdminIDs adds the "event_admins" edge to the EventAdmin entity by IDs.
+func (uuo *UserUpdateOne) AddEventAdminIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddEventAdminIDs(ids...)
 	return uuo
 }
 
-// AddReports adds the "reports" edges to the Report entity.
-func (uuo *UserUpdateOne) AddReports(r ...*Report) *UserUpdateOne {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// AddEventAdmins adds the "event_admins" edges to the EventAdmin entity.
+func (uuo *UserUpdateOne) AddEventAdmins(e ...*EventAdmin) *UserUpdateOne {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
 	}
-	return uuo.AddReportIDs(ids...)
+	return uuo.AddEventAdminIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -537,25 +542,25 @@ func (uuo *UserUpdateOne) RemoveEvents(e ...*Event) *UserUpdateOne {
 	return uuo.RemoveEventIDs(ids...)
 }
 
-// ClearReports clears all "reports" edges to the Report entity.
-func (uuo *UserUpdateOne) ClearReports() *UserUpdateOne {
-	uuo.mutation.ClearReports()
+// ClearEventAdmins clears all "event_admins" edges to the EventAdmin entity.
+func (uuo *UserUpdateOne) ClearEventAdmins() *UserUpdateOne {
+	uuo.mutation.ClearEventAdmins()
 	return uuo
 }
 
-// RemoveReportIDs removes the "reports" edge to Report entities by IDs.
-func (uuo *UserUpdateOne) RemoveReportIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemoveReportIDs(ids...)
+// RemoveEventAdminIDs removes the "event_admins" edge to EventAdmin entities by IDs.
+func (uuo *UserUpdateOne) RemoveEventAdminIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveEventAdminIDs(ids...)
 	return uuo
 }
 
-// RemoveReports removes "reports" edges to Report entities.
-func (uuo *UserUpdateOne) RemoveReports(r ...*Report) *UserUpdateOne {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// RemoveEventAdmins removes "event_admins" edges to EventAdmin entities.
+func (uuo *UserUpdateOne) RemoveEventAdmins(e ...*EventAdmin) *UserUpdateOne {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
 	}
-	return uuo.RemoveReportIDs(ids...)
+	return uuo.RemoveEventAdminIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -603,6 +608,11 @@ func (uuo *UserUpdateOne) check() error {
 	if v, ok := uuo.mutation.Username(); ok {
 		if err := user.UsernameValidator(v); err != nil {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "User.username": %w`, err)}
+		}
+	}
+	if v, ok := uuo.mutation.Email(); ok {
+		if err := user.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
 	if v, ok := uuo.mutation.PasswordHash(); ok {
@@ -741,28 +751,28 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uuo.mutation.ReportsCleared() {
+	if uuo.mutation.EventAdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ReportsTable,
-			Columns: user.ReportsPrimaryKey,
+			Table:   user.EventAdminsTable,
+			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(report.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.RemovedReportsIDs(); len(nodes) > 0 && !uuo.mutation.ReportsCleared() {
+	if nodes := uuo.mutation.RemovedEventAdminsIDs(); len(nodes) > 0 && !uuo.mutation.EventAdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ReportsTable,
-			Columns: user.ReportsPrimaryKey,
+			Table:   user.EventAdminsTable,
+			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(report.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -770,15 +780,15 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.ReportsIDs(); len(nodes) > 0 {
+	if nodes := uuo.mutation.EventAdminsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ReportsTable,
-			Columns: user.ReportsPrimaryKey,
+			Table:   user.EventAdminsTable,
+			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(report.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

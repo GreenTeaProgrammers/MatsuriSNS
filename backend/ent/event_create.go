@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/event"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/eventadmin"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/post"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/user"
 )
@@ -93,6 +94,21 @@ func (ec *EventCreate) AddPosts(p ...*Post) *EventCreate {
 		ids[i] = p[i].ID
 	}
 	return ec.AddPostIDs(ids...)
+}
+
+// AddEventAdminIDs adds the "event_admins" edge to the EventAdmin entity by IDs.
+func (ec *EventCreate) AddEventAdminIDs(ids ...int) *EventCreate {
+	ec.mutation.AddEventAdminIDs(ids...)
+	return ec
+}
+
+// AddEventAdmins adds the "event_admins" edges to the EventAdmin entity.
+func (ec *EventCreate) AddEventAdmins(e ...*EventAdmin) *EventCreate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return ec.AddEventAdminIDs(ids...)
 }
 
 // Mutation returns the EventMutation object of the builder.
@@ -213,6 +229,22 @@ func (ec *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ec.mutation.EventAdminsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.EventAdminsTable,
+			Columns: []string{event.EventAdminsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

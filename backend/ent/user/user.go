@@ -22,8 +22,8 @@ const (
 	EdgePosts = "posts"
 	// EdgeEvents holds the string denoting the events edge name in mutations.
 	EdgeEvents = "events"
-	// EdgeReports holds the string denoting the reports edge name in mutations.
-	EdgeReports = "reports"
+	// EdgeEventAdmins holds the string denoting the event_admins edge name in mutations.
+	EdgeEventAdmins = "event_admins"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// PostsTable is the table that holds the posts relation/edge. The primary key declared below.
@@ -38,11 +38,13 @@ const (
 	EventsInverseTable = "events"
 	// EventsColumn is the table column denoting the events relation/edge.
 	EventsColumn = "user_events"
-	// ReportsTable is the table that holds the reports relation/edge. The primary key declared below.
-	ReportsTable = "user_reports"
-	// ReportsInverseTable is the table name for the Report entity.
-	// It exists in this package in order to avoid circular dependency with the "report" package.
-	ReportsInverseTable = "reports"
+	// EventAdminsTable is the table that holds the event_admins relation/edge.
+	EventAdminsTable = "event_admins"
+	// EventAdminsInverseTable is the table name for the EventAdmin entity.
+	// It exists in this package in order to avoid circular dependency with the "eventadmin" package.
+	EventAdminsInverseTable = "event_admins"
+	// EventAdminsColumn is the table column denoting the event_admins relation/edge.
+	EventAdminsColumn = "user_event_admins"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -57,9 +59,6 @@ var (
 	// PostsPrimaryKey and PostsColumn2 are the table columns denoting the
 	// primary key for the posts relation (M2M).
 	PostsPrimaryKey = []string{"user_id", "post_id"}
-	// ReportsPrimaryKey and ReportsColumn2 are the table columns denoting the
-	// primary key for the reports relation (M2M).
-	ReportsPrimaryKey = []string{"user_id", "report_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -75,6 +74,8 @@ func ValidColumn(column string) bool {
 var (
 	// UsernameValidator is a validator for the "username" field. It is called by the builders before save.
 	UsernameValidator func(string) error
+	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	EmailValidator func(string) error
 	// PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
 	PasswordHashValidator func(string) error
 )
@@ -130,17 +131,17 @@ func ByEvents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByReportsCount orders the results by reports count.
-func ByReportsCount(opts ...sql.OrderTermOption) OrderOption {
+// ByEventAdminsCount orders the results by event_admins count.
+func ByEventAdminsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newReportsStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newEventAdminsStep(), opts...)
 	}
 }
 
-// ByReports orders the results by reports terms.
-func ByReports(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByEventAdmins orders the results by event_admins terms.
+func ByEventAdmins(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newReportsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newEventAdminsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newPostsStep() *sqlgraph.Step {
@@ -157,10 +158,10 @@ func newEventsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, EventsTable, EventsColumn),
 	)
 }
-func newReportsStep() *sqlgraph.Step {
+func newEventAdminsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ReportsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, ReportsTable, ReportsPrimaryKey...),
+		sqlgraph.To(EventAdminsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, EventAdminsTable, EventAdminsColumn),
 	)
 }

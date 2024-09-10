@@ -34,8 +34,8 @@ type UserEdges struct {
 	Posts []*Post `json:"posts,omitempty"`
 	// Events holds the value of the events edge.
 	Events []*Event `json:"events,omitempty"`
-	// Reports holds the value of the reports edge.
-	Reports []*Report `json:"reports,omitempty"`
+	// EventAdmins holds the value of the event_admins edge.
+	EventAdmins []*EventAdmin `json:"event_admins,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [3]bool
@@ -59,13 +59,13 @@ func (e UserEdges) EventsOrErr() ([]*Event, error) {
 	return nil, &NotLoadedError{edge: "events"}
 }
 
-// ReportsOrErr returns the Reports value or an error if the edge
+// EventAdminsOrErr returns the EventAdmins value or an error if the edge
 // was not loaded in eager-loading.
-func (e UserEdges) ReportsOrErr() ([]*Report, error) {
+func (e UserEdges) EventAdminsOrErr() ([]*EventAdmin, error) {
 	if e.loadedTypes[2] {
-		return e.Reports, nil
+		return e.EventAdmins, nil
 	}
-	return nil, &NotLoadedError{edge: "reports"}
+	return nil, &NotLoadedError{edge: "event_admins"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -139,9 +139,9 @@ func (u *User) QueryEvents() *EventQuery {
 	return NewUserClient(u.config).QueryEvents(u)
 }
 
-// QueryReports queries the "reports" edge of the User entity.
-func (u *User) QueryReports() *ReportQuery {
-	return NewUserClient(u.config).QueryReports(u)
+// QueryEventAdmins queries the "event_admins" edge of the User entity.
+func (u *User) QueryEventAdmins() *EventAdminQuery {
+	return NewUserClient(u.config).QueryEventAdmins(u)
 }
 
 // Update returns a builder for updating this User.

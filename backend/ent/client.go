@@ -16,9 +16,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/event"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/eventadmin"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/post"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/postimage"
-	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/report"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/user"
 )
 
@@ -29,12 +29,12 @@ type Client struct {
 	Schema *migrate.Schema
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
+	// EventAdmin is the client for interacting with the EventAdmin builders.
+	EventAdmin *EventAdminClient
 	// Post is the client for interacting with the Post builders.
 	Post *PostClient
 	// PostImage is the client for interacting with the PostImage builders.
 	PostImage *PostImageClient
-	// Report is the client for interacting with the Report builders.
-	Report *ReportClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -49,9 +49,9 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Event = NewEventClient(c.config)
+	c.EventAdmin = NewEventAdminClient(c.config)
 	c.Post = NewPostClient(c.config)
 	c.PostImage = NewPostImageClient(c.config)
-	c.Report = NewReportClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -143,13 +143,13 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:       ctx,
-		config:    cfg,
-		Event:     NewEventClient(cfg),
-		Post:      NewPostClient(cfg),
-		PostImage: NewPostImageClient(cfg),
-		Report:    NewReportClient(cfg),
-		User:      NewUserClient(cfg),
+		ctx:        ctx,
+		config:     cfg,
+		Event:      NewEventClient(cfg),
+		EventAdmin: NewEventAdminClient(cfg),
+		Post:       NewPostClient(cfg),
+		PostImage:  NewPostImageClient(cfg),
+		User:       NewUserClient(cfg),
 	}, nil
 }
 
@@ -167,13 +167,13 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:       ctx,
-		config:    cfg,
-		Event:     NewEventClient(cfg),
-		Post:      NewPostClient(cfg),
-		PostImage: NewPostImageClient(cfg),
-		Report:    NewReportClient(cfg),
-		User:      NewUserClient(cfg),
+		ctx:        ctx,
+		config:     cfg,
+		Event:      NewEventClient(cfg),
+		EventAdmin: NewEventAdminClient(cfg),
+		Post:       NewPostClient(cfg),
+		PostImage:  NewPostImageClient(cfg),
+		User:       NewUserClient(cfg),
 	}, nil
 }
 
@@ -203,9 +203,9 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.Event.Use(hooks...)
+	c.EventAdmin.Use(hooks...)
 	c.Post.Use(hooks...)
 	c.PostImage.Use(hooks...)
-	c.Report.Use(hooks...)
 	c.User.Use(hooks...)
 }
 
@@ -213,9 +213,9 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Event.Intercept(interceptors...)
+	c.EventAdmin.Intercept(interceptors...)
 	c.Post.Intercept(interceptors...)
 	c.PostImage.Intercept(interceptors...)
-	c.Report.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 }
 
@@ -224,12 +224,12 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *EventMutation:
 		return c.Event.mutate(ctx, m)
+	case *EventAdminMutation:
+		return c.EventAdmin.mutate(ctx, m)
 	case *PostMutation:
 		return c.Post.mutate(ctx, m)
 	case *PostImageMutation:
 		return c.PostImage.mutate(ctx, m)
-	case *ReportMutation:
-		return c.Report.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	default:
@@ -377,6 +377,22 @@ func (c *EventClient) QueryPosts(e *Event) *PostQuery {
 	return query
 }
 
+// QueryEventAdmins queries the event_admins edge of a Event.
+func (c *EventClient) QueryEventAdmins(e *Event) *EventAdminQuery {
+	query := (&EventAdminClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := e.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(event.Table, event.FieldID, id),
+			sqlgraph.To(eventadmin.Table, eventadmin.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, event.EventAdminsTable, event.EventAdminsColumn),
+		)
+		fromV = sqlgraph.Neighbors(e.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *EventClient) Hooks() []Hook {
 	return c.hooks.Event
@@ -399,6 +415,171 @@ func (c *EventClient) mutate(ctx context.Context, m *EventMutation) (Value, erro
 		return (&EventDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Event mutation op: %q", m.Op())
+	}
+}
+
+// EventAdminClient is a client for the EventAdmin schema.
+type EventAdminClient struct {
+	config
+}
+
+// NewEventAdminClient returns a client for the EventAdmin from the given config.
+func NewEventAdminClient(c config) *EventAdminClient {
+	return &EventAdminClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `eventadmin.Hooks(f(g(h())))`.
+func (c *EventAdminClient) Use(hooks ...Hook) {
+	c.hooks.EventAdmin = append(c.hooks.EventAdmin, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `eventadmin.Intercept(f(g(h())))`.
+func (c *EventAdminClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EventAdmin = append(c.inters.EventAdmin, interceptors...)
+}
+
+// Create returns a builder for creating a EventAdmin entity.
+func (c *EventAdminClient) Create() *EventAdminCreate {
+	mutation := newEventAdminMutation(c.config, OpCreate)
+	return &EventAdminCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EventAdmin entities.
+func (c *EventAdminClient) CreateBulk(builders ...*EventAdminCreate) *EventAdminCreateBulk {
+	return &EventAdminCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EventAdminClient) MapCreateBulk(slice any, setFunc func(*EventAdminCreate, int)) *EventAdminCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EventAdminCreateBulk{err: fmt.Errorf("calling to EventAdminClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EventAdminCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EventAdminCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EventAdmin.
+func (c *EventAdminClient) Update() *EventAdminUpdate {
+	mutation := newEventAdminMutation(c.config, OpUpdate)
+	return &EventAdminUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventAdminClient) UpdateOne(ea *EventAdmin) *EventAdminUpdateOne {
+	mutation := newEventAdminMutation(c.config, OpUpdateOne, withEventAdmin(ea))
+	return &EventAdminUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventAdminClient) UpdateOneID(id int) *EventAdminUpdateOne {
+	mutation := newEventAdminMutation(c.config, OpUpdateOne, withEventAdminID(id))
+	return &EventAdminUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EventAdmin.
+func (c *EventAdminClient) Delete() *EventAdminDelete {
+	mutation := newEventAdminMutation(c.config, OpDelete)
+	return &EventAdminDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventAdminClient) DeleteOne(ea *EventAdmin) *EventAdminDeleteOne {
+	return c.DeleteOneID(ea.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventAdminClient) DeleteOneID(id int) *EventAdminDeleteOne {
+	builder := c.Delete().Where(eventadmin.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventAdminDeleteOne{builder}
+}
+
+// Query returns a query builder for EventAdmin.
+func (c *EventAdminClient) Query() *EventAdminQuery {
+	return &EventAdminQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEventAdmin},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EventAdmin entity by its id.
+func (c *EventAdminClient) Get(ctx context.Context, id int) (*EventAdmin, error) {
+	return c.Query().Where(eventadmin.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventAdminClient) GetX(ctx context.Context, id int) *EventAdmin {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryEvent queries the event edge of a EventAdmin.
+func (c *EventAdminClient) QueryEvent(ea *EventAdmin) *EventQuery {
+	query := (&EventClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ea.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(eventadmin.Table, eventadmin.FieldID, id),
+			sqlgraph.To(event.Table, event.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, eventadmin.EventTable, eventadmin.EventColumn),
+		)
+		fromV = sqlgraph.Neighbors(ea.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a EventAdmin.
+func (c *EventAdminClient) QueryUser(ea *EventAdmin) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ea.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(eventadmin.Table, eventadmin.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, eventadmin.UserTable, eventadmin.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(ea.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *EventAdminClient) Hooks() []Hook {
+	return c.hooks.EventAdmin
+}
+
+// Interceptors returns the client interceptors.
+func (c *EventAdminClient) Interceptors() []Interceptor {
+	return c.inters.EventAdmin
+}
+
+func (c *EventAdminClient) mutate(ctx context.Context, m *EventAdminMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EventAdminCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EventAdminUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EventAdminUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EventAdminDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EventAdmin mutation op: %q", m.Op())
 	}
 }
 
@@ -551,22 +732,6 @@ func (c *PostClient) QueryImages(po *Post) *PostImageQuery {
 			sqlgraph.From(post.Table, post.FieldID, id),
 			sqlgraph.To(postimage.Table, postimage.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, post.ImagesTable, post.ImagesColumn),
-		)
-		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryReports queries the reports edge of a Post.
-func (c *PostClient) QueryReports(po *Post) *ReportQuery {
-	query := (&ReportClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := po.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(post.Table, post.FieldID, id),
-			sqlgraph.To(report.Table, report.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, post.ReportsTable, post.ReportsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
 		return fromV, nil
@@ -748,171 +913,6 @@ func (c *PostImageClient) mutate(ctx context.Context, m *PostImageMutation) (Val
 	}
 }
 
-// ReportClient is a client for the Report schema.
-type ReportClient struct {
-	config
-}
-
-// NewReportClient returns a client for the Report from the given config.
-func NewReportClient(c config) *ReportClient {
-	return &ReportClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `report.Hooks(f(g(h())))`.
-func (c *ReportClient) Use(hooks ...Hook) {
-	c.hooks.Report = append(c.hooks.Report, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `report.Intercept(f(g(h())))`.
-func (c *ReportClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Report = append(c.inters.Report, interceptors...)
-}
-
-// Create returns a builder for creating a Report entity.
-func (c *ReportClient) Create() *ReportCreate {
-	mutation := newReportMutation(c.config, OpCreate)
-	return &ReportCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Report entities.
-func (c *ReportClient) CreateBulk(builders ...*ReportCreate) *ReportCreateBulk {
-	return &ReportCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *ReportClient) MapCreateBulk(slice any, setFunc func(*ReportCreate, int)) *ReportCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &ReportCreateBulk{err: fmt.Errorf("calling to ReportClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*ReportCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &ReportCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Report.
-func (c *ReportClient) Update() *ReportUpdate {
-	mutation := newReportMutation(c.config, OpUpdate)
-	return &ReportUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *ReportClient) UpdateOne(r *Report) *ReportUpdateOne {
-	mutation := newReportMutation(c.config, OpUpdateOne, withReport(r))
-	return &ReportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *ReportClient) UpdateOneID(id int) *ReportUpdateOne {
-	mutation := newReportMutation(c.config, OpUpdateOne, withReportID(id))
-	return &ReportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Report.
-func (c *ReportClient) Delete() *ReportDelete {
-	mutation := newReportMutation(c.config, OpDelete)
-	return &ReportDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *ReportClient) DeleteOne(r *Report) *ReportDeleteOne {
-	return c.DeleteOneID(r.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *ReportClient) DeleteOneID(id int) *ReportDeleteOne {
-	builder := c.Delete().Where(report.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &ReportDeleteOne{builder}
-}
-
-// Query returns a query builder for Report.
-func (c *ReportClient) Query() *ReportQuery {
-	return &ReportQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeReport},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Report entity by its id.
-func (c *ReportClient) Get(ctx context.Context, id int) (*Report, error) {
-	return c.Query().Where(report.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *ReportClient) GetX(ctx context.Context, id int) *Report {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryPost queries the post edge of a Report.
-func (c *ReportClient) QueryPost(r *Report) *PostQuery {
-	query := (&PostClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := r.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(report.Table, report.FieldID, id),
-			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, report.PostTable, report.PostPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryReportedBy queries the reported_by edge of a Report.
-func (c *ReportClient) QueryReportedBy(r *Report) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := r.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(report.Table, report.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, report.ReportedByTable, report.ReportedByPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *ReportClient) Hooks() []Hook {
-	return c.hooks.Report
-}
-
-// Interceptors returns the client interceptors.
-func (c *ReportClient) Interceptors() []Interceptor {
-	return c.inters.Report
-}
-
-func (c *ReportClient) mutate(ctx context.Context, m *ReportMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&ReportCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&ReportUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&ReportUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&ReportDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Report mutation op: %q", m.Op())
-	}
-}
-
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -1053,15 +1053,15 @@ func (c *UserClient) QueryEvents(u *User) *EventQuery {
 	return query
 }
 
-// QueryReports queries the reports edge of a User.
-func (c *UserClient) QueryReports(u *User) *ReportQuery {
-	query := (&ReportClient{config: c.config}).Query()
+// QueryEventAdmins queries the event_admins edge of a User.
+func (c *UserClient) QueryEventAdmins(u *User) *EventAdminQuery {
+	query := (&EventAdminClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := u.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(report.Table, report.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, user.ReportsTable, user.ReportsPrimaryKey...),
+			sqlgraph.To(eventadmin.Table, eventadmin.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.EventAdminsTable, user.EventAdminsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -1097,9 +1097,9 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Event, Post, PostImage, Report, User []ent.Hook
+		Event, EventAdmin, Post, PostImage, User []ent.Hook
 	}
 	inters struct {
-		Event, Post, PostImage, Report, User []ent.Interceptor
+		Event, EventAdmin, Post, PostImage, User []ent.Interceptor
 	}
 )

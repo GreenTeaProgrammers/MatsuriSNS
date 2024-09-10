@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/event"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/eventadmin"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/post"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/predicate"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/user"
@@ -131,6 +132,21 @@ func (eu *EventUpdate) AddPosts(p ...*Post) *EventUpdate {
 	return eu.AddPostIDs(ids...)
 }
 
+// AddEventAdminIDs adds the "event_admins" edge to the EventAdmin entity by IDs.
+func (eu *EventUpdate) AddEventAdminIDs(ids ...int) *EventUpdate {
+	eu.mutation.AddEventAdminIDs(ids...)
+	return eu
+}
+
+// AddEventAdmins adds the "event_admins" edges to the EventAdmin entity.
+func (eu *EventUpdate) AddEventAdmins(e ...*EventAdmin) *EventUpdate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return eu.AddEventAdminIDs(ids...)
+}
+
 // Mutation returns the EventMutation object of the builder.
 func (eu *EventUpdate) Mutation() *EventMutation {
 	return eu.mutation
@@ -161,6 +177,27 @@ func (eu *EventUpdate) RemovePosts(p ...*Post) *EventUpdate {
 		ids[i] = p[i].ID
 	}
 	return eu.RemovePostIDs(ids...)
+}
+
+// ClearEventAdmins clears all "event_admins" edges to the EventAdmin entity.
+func (eu *EventUpdate) ClearEventAdmins() *EventUpdate {
+	eu.mutation.ClearEventAdmins()
+	return eu
+}
+
+// RemoveEventAdminIDs removes the "event_admins" edge to EventAdmin entities by IDs.
+func (eu *EventUpdate) RemoveEventAdminIDs(ids ...int) *EventUpdate {
+	eu.mutation.RemoveEventAdminIDs(ids...)
+	return eu
+}
+
+// RemoveEventAdmins removes "event_admins" edges to EventAdmin entities.
+func (eu *EventUpdate) RemoveEventAdmins(e ...*EventAdmin) *EventUpdate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return eu.RemoveEventAdminIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -309,6 +346,51 @@ func (eu *EventUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if eu.mutation.EventAdminsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.EventAdminsTable,
+			Columns: []string{event.EventAdminsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := eu.mutation.RemovedEventAdminsIDs(); len(nodes) > 0 && !eu.mutation.EventAdminsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.EventAdminsTable,
+			Columns: []string{event.EventAdminsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := eu.mutation.EventAdminsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.EventAdminsTable,
+			Columns: []string{event.EventAdminsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, eu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{event.Label}
@@ -431,6 +513,21 @@ func (euo *EventUpdateOne) AddPosts(p ...*Post) *EventUpdateOne {
 	return euo.AddPostIDs(ids...)
 }
 
+// AddEventAdminIDs adds the "event_admins" edge to the EventAdmin entity by IDs.
+func (euo *EventUpdateOne) AddEventAdminIDs(ids ...int) *EventUpdateOne {
+	euo.mutation.AddEventAdminIDs(ids...)
+	return euo
+}
+
+// AddEventAdmins adds the "event_admins" edges to the EventAdmin entity.
+func (euo *EventUpdateOne) AddEventAdmins(e ...*EventAdmin) *EventUpdateOne {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return euo.AddEventAdminIDs(ids...)
+}
+
 // Mutation returns the EventMutation object of the builder.
 func (euo *EventUpdateOne) Mutation() *EventMutation {
 	return euo.mutation
@@ -461,6 +558,27 @@ func (euo *EventUpdateOne) RemovePosts(p ...*Post) *EventUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return euo.RemovePostIDs(ids...)
+}
+
+// ClearEventAdmins clears all "event_admins" edges to the EventAdmin entity.
+func (euo *EventUpdateOne) ClearEventAdmins() *EventUpdateOne {
+	euo.mutation.ClearEventAdmins()
+	return euo
+}
+
+// RemoveEventAdminIDs removes the "event_admins" edge to EventAdmin entities by IDs.
+func (euo *EventUpdateOne) RemoveEventAdminIDs(ids ...int) *EventUpdateOne {
+	euo.mutation.RemoveEventAdminIDs(ids...)
+	return euo
+}
+
+// RemoveEventAdmins removes "event_admins" edges to EventAdmin entities.
+func (euo *EventUpdateOne) RemoveEventAdmins(e ...*EventAdmin) *EventUpdateOne {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return euo.RemoveEventAdminIDs(ids...)
 }
 
 // Where appends a list predicates to the EventUpdate builder.
@@ -632,6 +750,51 @@ func (euo *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if euo.mutation.EventAdminsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.EventAdminsTable,
+			Columns: []string{event.EventAdminsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := euo.mutation.RemovedEventAdminsIDs(); len(nodes) > 0 && !euo.mutation.EventAdminsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.EventAdminsTable,
+			Columns: []string{event.EventAdminsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := euo.mutation.EventAdminsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   event.EventAdminsTable,
+			Columns: []string{event.EventAdminsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

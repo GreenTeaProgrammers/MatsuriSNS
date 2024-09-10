@@ -16,21 +16,19 @@ import (
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/post"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/postimage"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/predicate"
-	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/report"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/user"
 )
 
 // PostQuery is the builder for querying Post entities.
 type PostQuery struct {
 	config
-	ctx         *QueryContext
-	order       []post.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.Post
-	withUser    *UserQuery
-	withEvent   *EventQuery
-	withImages  *PostImageQuery
-	withReports *ReportQuery
+	ctx        *QueryContext
+	order      []post.OrderOption
+	inters     []Interceptor
+	predicates []predicate.Post
+	withUser   *UserQuery
+	withEvent  *EventQuery
+	withImages *PostImageQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -126,28 +124,6 @@ func (pq *PostQuery) QueryImages() *PostImageQuery {
 			sqlgraph.From(post.Table, post.FieldID, selector),
 			sqlgraph.To(postimage.Table, postimage.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, post.ImagesTable, post.ImagesColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryReports chains the current query on the "reports" edge.
-func (pq *PostQuery) QueryReports() *ReportQuery {
-	query := (&ReportClient{config: pq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := pq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := pq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(post.Table, post.FieldID, selector),
-			sqlgraph.To(report.Table, report.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, post.ReportsTable, post.ReportsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -342,15 +318,14 @@ func (pq *PostQuery) Clone() *PostQuery {
 		return nil
 	}
 	return &PostQuery{
-		config:      pq.config,
-		ctx:         pq.ctx.Clone(),
-		order:       append([]post.OrderOption{}, pq.order...),
-		inters:      append([]Interceptor{}, pq.inters...),
-		predicates:  append([]predicate.Post{}, pq.predicates...),
-		withUser:    pq.withUser.Clone(),
-		withEvent:   pq.withEvent.Clone(),
-		withImages:  pq.withImages.Clone(),
-		withReports: pq.withReports.Clone(),
+		config:     pq.config,
+		ctx:        pq.ctx.Clone(),
+		order:      append([]post.OrderOption{}, pq.order...),
+		inters:     append([]Interceptor{}, pq.inters...),
+		predicates: append([]predicate.Post{}, pq.predicates...),
+		withUser:   pq.withUser.Clone(),
+		withEvent:  pq.withEvent.Clone(),
+		withImages: pq.withImages.Clone(),
 		// clone intermediate query.
 		sql:  pq.sql.Clone(),
 		path: pq.path,
@@ -387,17 +362,6 @@ func (pq *PostQuery) WithImages(opts ...func(*PostImageQuery)) *PostQuery {
 		opt(query)
 	}
 	pq.withImages = query
-	return pq
-}
-
-// WithReports tells the query-builder to eager-load the nodes that are connected to
-// the "reports" edge. The optional arguments are used to configure the query builder of the edge.
-func (pq *PostQuery) WithReports(opts ...func(*ReportQuery)) *PostQuery {
-	query := (&ReportClient{config: pq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	pq.withReports = query
 	return pq
 }
 
@@ -479,11 +443,10 @@ func (pq *PostQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Post, e
 	var (
 		nodes       = []*Post{}
 		_spec       = pq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [3]bool{
 			pq.withUser != nil,
 			pq.withEvent != nil,
 			pq.withImages != nil,
-			pq.withReports != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -522,13 +485,6 @@ func (pq *PostQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Post, e
 		if err := pq.loadImages(ctx, query, nodes,
 			func(n *Post) { n.Edges.Images = []*PostImage{} },
 			func(n *Post, e *PostImage) { n.Edges.Images = append(n.Edges.Images, e) }); err != nil {
-			return nil, err
-		}
-	}
-	if query := pq.withReports; query != nil {
-		if err := pq.loadReports(ctx, query, nodes,
-			func(n *Post) { n.Edges.Reports = []*Report{} },
-			func(n *Post, e *Report) { n.Edges.Reports = append(n.Edges.Reports, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -685,67 +641,6 @@ func (pq *PostQuery) loadImages(ctx context.Context, query *PostImageQuery, node
 			return fmt.Errorf(`unexpected referenced foreign-key "post_images" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
-	}
-	return nil
-}
-func (pq *PostQuery) loadReports(ctx context.Context, query *ReportQuery, nodes []*Post, init func(*Post), assign func(*Post, *Report)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Post)
-	nids := make(map[int]map[*Post]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(post.ReportsTable)
-		s.Join(joinT).On(s.C(report.FieldID), joinT.C(post.ReportsPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(post.ReportsPrimaryKey[0]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(post.ReportsPrimaryKey[0]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Post]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Report](ctx, query, qr, query.inters)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "reports" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
 	}
 	return nil
 }

@@ -24,6 +24,8 @@ const (
 	EdgeCreatedBy = "created_by"
 	// EdgePosts holds the string denoting the posts edge name in mutations.
 	EdgePosts = "posts"
+	// EdgeEventAdmins holds the string denoting the event_admins edge name in mutations.
+	EdgeEventAdmins = "event_admins"
 	// Table holds the table name of the event in the database.
 	Table = "events"
 	// CreatedByTable is the table that holds the created_by relation/edge.
@@ -38,6 +40,13 @@ const (
 	// PostsInverseTable is the table name for the Post entity.
 	// It exists in this package in order to avoid circular dependency with the "post" package.
 	PostsInverseTable = "posts"
+	// EventAdminsTable is the table that holds the event_admins relation/edge.
+	EventAdminsTable = "event_admins"
+	// EventAdminsInverseTable is the table name for the EventAdmin entity.
+	// It exists in this package in order to avoid circular dependency with the "eventadmin" package.
+	EventAdminsInverseTable = "event_admins"
+	// EventAdminsColumn is the table column denoting the event_admins relation/edge.
+	EventAdminsColumn = "event_event_admins"
 )
 
 // Columns holds all SQL columns for event fields.
@@ -131,6 +140,20 @@ func ByPosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newPostsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByEventAdminsCount orders the results by event_admins count.
+func ByEventAdminsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newEventAdminsStep(), opts...)
+	}
+}
+
+// ByEventAdmins orders the results by event_admins terms.
+func ByEventAdmins(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newEventAdminsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newCreatedByStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -143,5 +166,12 @@ func newPostsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PostsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, PostsTable, PostsPrimaryKey...),
+	)
+}
+func newEventAdminsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(EventAdminsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, EventAdminsTable, EventAdminsColumn),
 	)
 }

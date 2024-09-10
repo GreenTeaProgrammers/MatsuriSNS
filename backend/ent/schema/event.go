@@ -26,5 +26,6 @@ func (Event) Edges() []ent.Edge {
 			Ref("events").
 			Unique(),
 		edge.To("posts", Post.Type),
+		edge.To("event_admins", EventAdmin.Type),
 	}
 }

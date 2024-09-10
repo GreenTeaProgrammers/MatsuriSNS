@@ -309,21 +309,21 @@ func HasEventsWith(preds ...predicate.Event) predicate.User {
 	})
 }
 
-// HasReports applies the HasEdge predicate on the "reports" edge.
-func HasReports() predicate.User {
+// HasEventAdmins applies the HasEdge predicate on the "event_admins" edge.
+func HasEventAdmins() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, ReportsTable, ReportsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, EventAdminsTable, EventAdminsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasReportsWith applies the HasEdge predicate on the "reports" edge with a given conditions (other predicates).
-func HasReportsWith(preds ...predicate.Report) predicate.User {
+// HasEventAdminsWith applies the HasEdge predicate on the "event_admins" edge with a given conditions (other predicates).
+func HasEventAdminsWith(preds ...predicate.EventAdmin) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
-		step := newReportsStep()
+		step := newEventAdminsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

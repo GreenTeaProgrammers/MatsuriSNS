@@ -14,7 +14,7 @@ type User struct {
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("username").NotEmpty(),
-		field.String("email").Unique(),
+		field.String("email").Unique().NotEmpty(),
 		field.String("password_hash").NotEmpty(),
 	}
 }
@@ -23,6 +23,6 @@ func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("posts", Post.Type),
 		edge.To("events", Event.Type),
-		edge.To("reports", Report.Type),
+		edge.To("event_admins", EventAdmin.Type),
 	}
 }

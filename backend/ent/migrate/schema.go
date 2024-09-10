@@ -31,6 +31,33 @@ var (
 			},
 		},
 	}
+	// EventAdminsColumns holds the columns for the "event_admins" table.
+	EventAdminsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "event_event_admins", Type: field.TypeInt, Nullable: true},
+		{Name: "user_event_admins", Type: field.TypeInt, Nullable: true},
+	}
+	// EventAdminsTable holds the schema information for the "event_admins" table.
+	EventAdminsTable = &schema.Table{
+		Name:       "event_admins",
+		Columns:    EventAdminsColumns,
+		PrimaryKey: []*schema.Column{EventAdminsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "event_admins_events_event_admins",
+				Columns:    []*schema.Column{EventAdminsColumns[2]},
+				RefColumns: []*schema.Column{EventsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "event_admins_users_event_admins",
+				Columns:    []*schema.Column{EventAdminsColumns[3]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// PostsColumns holds the columns for the "posts" table.
 	PostsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -38,6 +65,8 @@ var (
 		{Name: "location_x", Type: field.TypeFloat64},
 		{Name: "location_y", Type: field.TypeFloat64},
 		{Name: "video_url", Type: field.TypeString, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
 	// PostsTable holds the schema information for the "posts" table.
 	PostsTable = &schema.Table{
@@ -64,17 +93,6 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 		},
-	}
-	// ReportsColumns holds the columns for the "reports" table.
-	ReportsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "reason", Type: field.TypeString, Size: 2147483647},
-	}
-	// ReportsTable holds the schema information for the "reports" table.
-	ReportsTable = &schema.Table{
-		Name:       "reports",
-		Columns:    ReportsColumns,
-		PrimaryKey: []*schema.Column{ReportsColumns[0]},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -114,31 +132,6 @@ var (
 			},
 		},
 	}
-	// PostReportsColumns holds the columns for the "post_reports" table.
-	PostReportsColumns = []*schema.Column{
-		{Name: "post_id", Type: field.TypeInt},
-		{Name: "report_id", Type: field.TypeInt},
-	}
-	// PostReportsTable holds the schema information for the "post_reports" table.
-	PostReportsTable = &schema.Table{
-		Name:       "post_reports",
-		Columns:    PostReportsColumns,
-		PrimaryKey: []*schema.Column{PostReportsColumns[0], PostReportsColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "post_reports_post_id",
-				Columns:    []*schema.Column{PostReportsColumns[0]},
-				RefColumns: []*schema.Column{PostsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "post_reports_report_id",
-				Columns:    []*schema.Column{PostReportsColumns[1]},
-				RefColumns: []*schema.Column{ReportsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// UserPostsColumns holds the columns for the "user_posts" table.
 	UserPostsColumns = []*schema.Column{
 		{Name: "user_id", Type: field.TypeInt},
@@ -164,54 +157,25 @@ var (
 			},
 		},
 	}
-	// UserReportsColumns holds the columns for the "user_reports" table.
-	UserReportsColumns = []*schema.Column{
-		{Name: "user_id", Type: field.TypeInt},
-		{Name: "report_id", Type: field.TypeInt},
-	}
-	// UserReportsTable holds the schema information for the "user_reports" table.
-	UserReportsTable = &schema.Table{
-		Name:       "user_reports",
-		Columns:    UserReportsColumns,
-		PrimaryKey: []*schema.Column{UserReportsColumns[0], UserReportsColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "user_reports_user_id",
-				Columns:    []*schema.Column{UserReportsColumns[0]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "user_reports_report_id",
-				Columns:    []*schema.Column{UserReportsColumns[1]},
-				RefColumns: []*schema.Column{ReportsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		EventsTable,
+		EventAdminsTable,
 		PostsTable,
 		PostImagesTable,
-		ReportsTable,
 		UsersTable,
 		EventPostsTable,
-		PostReportsTable,
 		UserPostsTable,
-		UserReportsTable,
 	}
 )
 
 func init() {
 	EventsTable.ForeignKeys[0].RefTable = UsersTable
+	EventAdminsTable.ForeignKeys[0].RefTable = EventsTable
+	EventAdminsTable.ForeignKeys[1].RefTable = UsersTable
 	PostImagesTable.ForeignKeys[0].RefTable = PostsTable
 	EventPostsTable.ForeignKeys[0].RefTable = EventsTable
 	EventPostsTable.ForeignKeys[1].RefTable = PostsTable
-	PostReportsTable.ForeignKeys[0].RefTable = PostsTable
-	PostReportsTable.ForeignKeys[1].RefTable = ReportsTable
 	UserPostsTable.ForeignKeys[0].RefTable = UsersTable
 	UserPostsTable.ForeignKeys[1].RefTable = PostsTable
-	UserReportsTable.ForeignKeys[0].RefTable = UsersTable
-	UserReportsTable.ForeignKeys[1].RefTable = ReportsTable
 }

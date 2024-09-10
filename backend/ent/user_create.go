@@ -10,8 +10,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/event"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/eventadmin"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/post"
-	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/report"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/user"
 )
 
@@ -70,19 +70,19 @@ func (uc *UserCreate) AddEvents(e ...*Event) *UserCreate {
 	return uc.AddEventIDs(ids...)
 }
 
-// AddReportIDs adds the "reports" edge to the Report entity by IDs.
-func (uc *UserCreate) AddReportIDs(ids ...int) *UserCreate {
-	uc.mutation.AddReportIDs(ids...)
+// AddEventAdminIDs adds the "event_admins" edge to the EventAdmin entity by IDs.
+func (uc *UserCreate) AddEventAdminIDs(ids ...int) *UserCreate {
+	uc.mutation.AddEventAdminIDs(ids...)
 	return uc
 }
 
-// AddReports adds the "reports" edges to the Report entity.
-func (uc *UserCreate) AddReports(r ...*Report) *UserCreate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+// AddEventAdmins adds the "event_admins" edges to the EventAdmin entity.
+func (uc *UserCreate) AddEventAdmins(e ...*EventAdmin) *UserCreate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
 	}
-	return uc.AddReportIDs(ids...)
+	return uc.AddEventAdminIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -129,6 +129,11 @@ func (uc *UserCreate) check() error {
 	}
 	if _, ok := uc.mutation.Email(); !ok {
 		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "User.email"`)}
+	}
+	if v, ok := uc.mutation.Email(); ok {
+		if err := user.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
+		}
 	}
 	if _, ok := uc.mutation.PasswordHash(); !ok {
 		return &ValidationError{Name: "password_hash", err: errors.New(`ent: missing required field "User.password_hash"`)}
@@ -208,15 +213,15 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := uc.mutation.ReportsIDs(); len(nodes) > 0 {
+	if nodes := uc.mutation.EventAdminsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   user.ReportsTable,
-			Columns: user.ReportsPrimaryKey,
+			Table:   user.EventAdminsTable,
+			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(report.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

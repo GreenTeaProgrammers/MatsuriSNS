@@ -3,10 +3,12 @@
 package ent
 
 import (
+	"time"
+
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/event"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/eventadmin"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/post"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/postimage"
-	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/report"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/schema"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/user"
 )
@@ -25,30 +27,44 @@ func init() {
 	eventDescMapURL := eventFields[2].Descriptor()
 	// event.MapURLValidator is a validator for the "map_url" field. It is called by the builders before save.
 	event.MapURLValidator = eventDescMapURL.Validators[0].(func(string) error)
+	eventadminFields := schema.EventAdmin{}.Fields()
+	_ = eventadminFields
+	// eventadminDescCreatedAt is the schema descriptor for created_at field.
+	eventadminDescCreatedAt := eventadminFields[0].Descriptor()
+	// eventadmin.DefaultCreatedAt holds the default value on creation for the created_at field.
+	eventadmin.DefaultCreatedAt = eventadminDescCreatedAt.Default.(func() time.Time)
 	postFields := schema.Post{}.Fields()
 	_ = postFields
 	// postDescComment is the schema descriptor for comment field.
 	postDescComment := postFields[0].Descriptor()
 	// post.CommentValidator is a validator for the "comment" field. It is called by the builders before save.
 	post.CommentValidator = postDescComment.Validators[0].(func(string) error)
+	// postDescCreatedAt is the schema descriptor for created_at field.
+	postDescCreatedAt := postFields[4].Descriptor()
+	// post.DefaultCreatedAt holds the default value on creation for the created_at field.
+	post.DefaultCreatedAt = postDescCreatedAt.Default.(func() time.Time)
+	// postDescUpdatedAt is the schema descriptor for updated_at field.
+	postDescUpdatedAt := postFields[5].Descriptor()
+	// post.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	post.DefaultUpdatedAt = postDescUpdatedAt.Default.(func() time.Time)
+	// post.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	post.UpdateDefaultUpdatedAt = postDescUpdatedAt.UpdateDefault.(func() time.Time)
 	postimageFields := schema.PostImage{}.Fields()
 	_ = postimageFields
 	// postimageDescImageURL is the schema descriptor for image_url field.
 	postimageDescImageURL := postimageFields[0].Descriptor()
 	// postimage.ImageURLValidator is a validator for the "image_url" field. It is called by the builders before save.
 	postimage.ImageURLValidator = postimageDescImageURL.Validators[0].(func(string) error)
-	reportFields := schema.Report{}.Fields()
-	_ = reportFields
-	// reportDescReason is the schema descriptor for reason field.
-	reportDescReason := reportFields[0].Descriptor()
-	// report.ReasonValidator is a validator for the "reason" field. It is called by the builders before save.
-	report.ReasonValidator = reportDescReason.Validators[0].(func(string) error)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescUsername is the schema descriptor for username field.
 	userDescUsername := userFields[0].Descriptor()
 	// user.UsernameValidator is a validator for the "username" field. It is called by the builders before save.
 	user.UsernameValidator = userDescUsername.Validators[0].(func(string) error)
+	// userDescEmail is the schema descriptor for email field.
+	userDescEmail := userFields[1].Descriptor()
+	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
 	// userDescPasswordHash is the schema descriptor for password_hash field.
 	userDescPasswordHash := userFields[2].Descriptor()
 	// user.PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.

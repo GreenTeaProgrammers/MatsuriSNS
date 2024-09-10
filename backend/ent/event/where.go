@@ -399,6 +399,29 @@ func HasPostsWith(preds ...predicate.Post) predicate.Event {
 	})
 }
 
+// HasEventAdmins applies the HasEdge predicate on the "event_admins" edge.
+func HasEventAdmins() predicate.Event {
+	return predicate.Event(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, EventAdminsTable, EventAdminsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasEventAdminsWith applies the HasEdge predicate on the "event_admins" edge with a given conditions (other predicates).
+func HasEventAdminsWith(preds ...predicate.EventAdmin) predicate.Event {
+	return predicate.Event(func(s *sql.Selector) {
+		step := newEventAdminsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Event) predicate.Event {
 	return predicate.Event(sql.AndPredicates(predicates...))

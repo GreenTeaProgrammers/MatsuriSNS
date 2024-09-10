@@ -38,9 +38,11 @@ type EventEdges struct {
 	CreatedBy *User `json:"created_by,omitempty"`
 	// Posts holds the value of the posts edge.
 	Posts []*Post `json:"posts,omitempty"`
+	// EventAdmins holds the value of the event_admins edge.
+	EventAdmins []*EventAdmin `json:"event_admins,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // CreatedByOrErr returns the CreatedBy value or an error if the edge
@@ -61,6 +63,15 @@ func (e EventEdges) PostsOrErr() ([]*Post, error) {
 		return e.Posts, nil
 	}
 	return nil, &NotLoadedError{edge: "posts"}
+}
+
+// EventAdminsOrErr returns the EventAdmins value or an error if the edge
+// was not loaded in eager-loading.
+func (e EventEdges) EventAdminsOrErr() ([]*EventAdmin, error) {
+	if e.loadedTypes[2] {
+		return e.EventAdmins, nil
+	}
+	return nil, &NotLoadedError{edge: "event_admins"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -147,6 +158,11 @@ func (e *Event) QueryCreatedBy() *UserQuery {
 // QueryPosts queries the "posts" edge of the Event entity.
 func (e *Event) QueryPosts() *PostQuery {
 	return NewEventClient(e.config).QueryPosts(e)
+}
+
+// QueryEventAdmins queries the "event_admins" edge of the Event entity.
+func (e *Event) QueryEventAdmins() *EventAdminQuery {
+	return NewEventClient(e.config).QueryEventAdmins(e)
 }
 
 // Update returns a builder for updating this Event.

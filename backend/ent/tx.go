@@ -14,12 +14,12 @@ type Tx struct {
 	config
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
+	// EventAdmin is the client for interacting with the EventAdmin builders.
+	EventAdmin *EventAdminClient
 	// Post is the client for interacting with the Post builders.
 	Post *PostClient
 	// PostImage is the client for interacting with the PostImage builders.
 	PostImage *PostImageClient
-	// Report is the client for interacting with the Report builders.
-	Report *ReportClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 
@@ -154,9 +154,9 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Event = NewEventClient(tx.config)
+	tx.EventAdmin = NewEventAdminClient(tx.config)
 	tx.Post = NewPostClient(tx.config)
 	tx.PostImage = NewPostImageClient(tx.config)
-	tx.Report = NewReportClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
 

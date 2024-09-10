@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -14,7 +15,6 @@ import (
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/post"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/postimage"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/predicate"
-	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/report"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/user"
 )
 
@@ -107,6 +107,26 @@ func (pu *PostUpdate) ClearVideoURL() *PostUpdate {
 	return pu
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (pu *PostUpdate) SetCreatedAt(t time.Time) *PostUpdate {
+	pu.mutation.SetCreatedAt(t)
+	return pu
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (pu *PostUpdate) SetNillableCreatedAt(t *time.Time) *PostUpdate {
+	if t != nil {
+		pu.SetCreatedAt(*t)
+	}
+	return pu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (pu *PostUpdate) SetUpdatedAt(t time.Time) *PostUpdate {
+	pu.mutation.SetUpdatedAt(t)
+	return pu
+}
+
 // AddUserIDs adds the "user" edge to the User entity by IDs.
 func (pu *PostUpdate) AddUserIDs(ids ...int) *PostUpdate {
 	pu.mutation.AddUserIDs(ids...)
@@ -150,21 +170,6 @@ func (pu *PostUpdate) AddImages(p ...*PostImage) *PostUpdate {
 		ids[i] = p[i].ID
 	}
 	return pu.AddImageIDs(ids...)
-}
-
-// AddReportIDs adds the "reports" edge to the Report entity by IDs.
-func (pu *PostUpdate) AddReportIDs(ids ...int) *PostUpdate {
-	pu.mutation.AddReportIDs(ids...)
-	return pu
-}
-
-// AddReports adds the "reports" edges to the Report entity.
-func (pu *PostUpdate) AddReports(r ...*Report) *PostUpdate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return pu.AddReportIDs(ids...)
 }
 
 // Mutation returns the PostMutation object of the builder.
@@ -235,29 +240,9 @@ func (pu *PostUpdate) RemoveImages(p ...*PostImage) *PostUpdate {
 	return pu.RemoveImageIDs(ids...)
 }
 
-// ClearReports clears all "reports" edges to the Report entity.
-func (pu *PostUpdate) ClearReports() *PostUpdate {
-	pu.mutation.ClearReports()
-	return pu
-}
-
-// RemoveReportIDs removes the "reports" edge to Report entities by IDs.
-func (pu *PostUpdate) RemoveReportIDs(ids ...int) *PostUpdate {
-	pu.mutation.RemoveReportIDs(ids...)
-	return pu
-}
-
-// RemoveReports removes "reports" edges to Report entities.
-func (pu *PostUpdate) RemoveReports(r ...*Report) *PostUpdate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return pu.RemoveReportIDs(ids...)
-}
-
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (pu *PostUpdate) Save(ctx context.Context) (int, error) {
+	pu.defaults()
 	return withHooks(ctx, pu.sqlSave, pu.mutation, pu.hooks)
 }
 
@@ -280,6 +265,14 @@ func (pu *PostUpdate) Exec(ctx context.Context) error {
 func (pu *PostUpdate) ExecX(ctx context.Context) {
 	if err := pu.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (pu *PostUpdate) defaults() {
+	if _, ok := pu.mutation.UpdatedAt(); !ok {
+		v := post.UpdateDefaultUpdatedAt()
+		pu.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -325,6 +318,12 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.VideoURLCleared() {
 		_spec.ClearField(post.FieldVideoURL, field.TypeString)
+	}
+	if value, ok := pu.mutation.CreatedAt(); ok {
+		_spec.SetField(post.FieldCreatedAt, field.TypeTime, value)
+	}
+	if value, ok := pu.mutation.UpdatedAt(); ok {
+		_spec.SetField(post.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if pu.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -461,51 +460,6 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pu.mutation.ReportsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   post.ReportsTable,
-			Columns: post.ReportsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(report.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pu.mutation.RemovedReportsIDs(); len(nodes) > 0 && !pu.mutation.ReportsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   post.ReportsTable,
-			Columns: post.ReportsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(report.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pu.mutation.ReportsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   post.ReportsTable,
-			Columns: post.ReportsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(report.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{post.Label}
@@ -602,6 +556,26 @@ func (puo *PostUpdateOne) ClearVideoURL() *PostUpdateOne {
 	return puo
 }
 
+// SetCreatedAt sets the "created_at" field.
+func (puo *PostUpdateOne) SetCreatedAt(t time.Time) *PostUpdateOne {
+	puo.mutation.SetCreatedAt(t)
+	return puo
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (puo *PostUpdateOne) SetNillableCreatedAt(t *time.Time) *PostUpdateOne {
+	if t != nil {
+		puo.SetCreatedAt(*t)
+	}
+	return puo
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (puo *PostUpdateOne) SetUpdatedAt(t time.Time) *PostUpdateOne {
+	puo.mutation.SetUpdatedAt(t)
+	return puo
+}
+
 // AddUserIDs adds the "user" edge to the User entity by IDs.
 func (puo *PostUpdateOne) AddUserIDs(ids ...int) *PostUpdateOne {
 	puo.mutation.AddUserIDs(ids...)
@@ -645,21 +619,6 @@ func (puo *PostUpdateOne) AddImages(p ...*PostImage) *PostUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return puo.AddImageIDs(ids...)
-}
-
-// AddReportIDs adds the "reports" edge to the Report entity by IDs.
-func (puo *PostUpdateOne) AddReportIDs(ids ...int) *PostUpdateOne {
-	puo.mutation.AddReportIDs(ids...)
-	return puo
-}
-
-// AddReports adds the "reports" edges to the Report entity.
-func (puo *PostUpdateOne) AddReports(r ...*Report) *PostUpdateOne {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return puo.AddReportIDs(ids...)
 }
 
 // Mutation returns the PostMutation object of the builder.
@@ -730,27 +689,6 @@ func (puo *PostUpdateOne) RemoveImages(p ...*PostImage) *PostUpdateOne {
 	return puo.RemoveImageIDs(ids...)
 }
 
-// ClearReports clears all "reports" edges to the Report entity.
-func (puo *PostUpdateOne) ClearReports() *PostUpdateOne {
-	puo.mutation.ClearReports()
-	return puo
-}
-
-// RemoveReportIDs removes the "reports" edge to Report entities by IDs.
-func (puo *PostUpdateOne) RemoveReportIDs(ids ...int) *PostUpdateOne {
-	puo.mutation.RemoveReportIDs(ids...)
-	return puo
-}
-
-// RemoveReports removes "reports" edges to Report entities.
-func (puo *PostUpdateOne) RemoveReports(r ...*Report) *PostUpdateOne {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
-	}
-	return puo.RemoveReportIDs(ids...)
-}
-
 // Where appends a list predicates to the PostUpdate builder.
 func (puo *PostUpdateOne) Where(ps ...predicate.Post) *PostUpdateOne {
 	puo.mutation.Where(ps...)
@@ -766,6 +704,7 @@ func (puo *PostUpdateOne) Select(field string, fields ...string) *PostUpdateOne 
 
 // Save executes the query and returns the updated Post entity.
 func (puo *PostUpdateOne) Save(ctx context.Context) (*Post, error) {
+	puo.defaults()
 	return withHooks(ctx, puo.sqlSave, puo.mutation, puo.hooks)
 }
 
@@ -788,6 +727,14 @@ func (puo *PostUpdateOne) Exec(ctx context.Context) error {
 func (puo *PostUpdateOne) ExecX(ctx context.Context) {
 	if err := puo.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (puo *PostUpdateOne) defaults() {
+	if _, ok := puo.mutation.UpdatedAt(); !ok {
+		v := post.UpdateDefaultUpdatedAt()
+		puo.mutation.SetUpdatedAt(v)
 	}
 }
 
@@ -850,6 +797,12 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 	}
 	if puo.mutation.VideoURLCleared() {
 		_spec.ClearField(post.FieldVideoURL, field.TypeString)
+	}
+	if value, ok := puo.mutation.CreatedAt(); ok {
+		_spec.SetField(post.FieldCreatedAt, field.TypeTime, value)
+	}
+	if value, ok := puo.mutation.UpdatedAt(); ok {
+		_spec.SetField(post.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if puo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -979,51 +932,6 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(postimage.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if puo.mutation.ReportsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   post.ReportsTable,
-			Columns: post.ReportsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(report.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := puo.mutation.RemovedReportsIDs(); len(nodes) > 0 && !puo.mutation.ReportsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   post.ReportsTable,
-			Columns: post.ReportsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(report.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := puo.mutation.ReportsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   post.ReportsTable,
-			Columns: post.ReportsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(report.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

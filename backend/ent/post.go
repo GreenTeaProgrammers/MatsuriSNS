@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -24,6 +25,10 @@ type Post struct {
 	LocationY float64 `json:"location_y,omitempty"`
 	// VideoURL holds the value of the "video_url" field.
 	VideoURL string `json:"video_url,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PostQuery when eager-loading is set.
 	Edges        PostEdges `json:"edges"`
@@ -38,11 +43,9 @@ type PostEdges struct {
 	Event []*Event `json:"event,omitempty"`
 	// Images holds the value of the images edge.
 	Images []*PostImage `json:"images,omitempty"`
-	// Reports holds the value of the reports edge.
-	Reports []*Report `json:"reports,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [3]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -72,15 +75,6 @@ func (e PostEdges) ImagesOrErr() ([]*PostImage, error) {
 	return nil, &NotLoadedError{edge: "images"}
 }
 
-// ReportsOrErr returns the Reports value or an error if the edge
-// was not loaded in eager-loading.
-func (e PostEdges) ReportsOrErr() ([]*Report, error) {
-	if e.loadedTypes[3] {
-		return e.Reports, nil
-	}
-	return nil, &NotLoadedError{edge: "reports"}
-}
-
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Post) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -92,6 +86,8 @@ func (*Post) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case post.FieldComment, post.FieldVideoURL:
 			values[i] = new(sql.NullString)
+		case post.FieldCreatedAt, post.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -137,6 +133,18 @@ func (po *Post) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				po.VideoURL = value.String
 			}
+		case post.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				po.CreatedAt = value.Time
+			}
+		case post.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				po.UpdatedAt = value.Time
+			}
 		default:
 			po.selectValues.Set(columns[i], values[i])
 		}
@@ -163,11 +171,6 @@ func (po *Post) QueryEvent() *EventQuery {
 // QueryImages queries the "images" edge of the Post entity.
 func (po *Post) QueryImages() *PostImageQuery {
 	return NewPostClient(po.config).QueryImages(po)
-}
-
-// QueryReports queries the "reports" edge of the Post entity.
-func (po *Post) QueryReports() *ReportQuery {
-	return NewPostClient(po.config).QueryReports(po)
 }
 
 // Update returns a builder for updating this Post.
@@ -204,6 +207,12 @@ func (po *Post) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("video_url=")
 	builder.WriteString(po.VideoURL)
+	builder.WriteString(", ")
+	builder.WriteString("created_at=")
+	builder.WriteString(po.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("updated_at=")
+	builder.WriteString(po.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/event"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/eventadmin"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/post"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/predicate"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/user"
@@ -21,13 +22,14 @@ import (
 // EventQuery is the builder for querying Event entities.
 type EventQuery struct {
 	config
-	ctx           *QueryContext
-	order         []event.OrderOption
-	inters        []Interceptor
-	predicates    []predicate.Event
-	withCreatedBy *UserQuery
-	withPosts     *PostQuery
-	withFKs       bool
+	ctx             *QueryContext
+	order           []event.OrderOption
+	inters          []Interceptor
+	predicates      []predicate.Event
+	withCreatedBy   *UserQuery
+	withPosts       *PostQuery
+	withEventAdmins *EventAdminQuery
+	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -101,6 +103,28 @@ func (eq *EventQuery) QueryPosts() *PostQuery {
 			sqlgraph.From(event.Table, event.FieldID, selector),
 			sqlgraph.To(post.Table, post.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, event.PostsTable, event.PostsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(eq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryEventAdmins chains the current query on the "event_admins" edge.
+func (eq *EventQuery) QueryEventAdmins() *EventAdminQuery {
+	query := (&EventAdminClient{config: eq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := eq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := eq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(event.Table, event.FieldID, selector),
+			sqlgraph.To(eventadmin.Table, eventadmin.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, event.EventAdminsTable, event.EventAdminsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(eq.driver.Dialect(), step)
 		return fromU, nil
@@ -295,13 +319,14 @@ func (eq *EventQuery) Clone() *EventQuery {
 		return nil
 	}
 	return &EventQuery{
-		config:        eq.config,
-		ctx:           eq.ctx.Clone(),
-		order:         append([]event.OrderOption{}, eq.order...),
-		inters:        append([]Interceptor{}, eq.inters...),
-		predicates:    append([]predicate.Event{}, eq.predicates...),
-		withCreatedBy: eq.withCreatedBy.Clone(),
-		withPosts:     eq.withPosts.Clone(),
+		config:          eq.config,
+		ctx:             eq.ctx.Clone(),
+		order:           append([]event.OrderOption{}, eq.order...),
+		inters:          append([]Interceptor{}, eq.inters...),
+		predicates:      append([]predicate.Event{}, eq.predicates...),
+		withCreatedBy:   eq.withCreatedBy.Clone(),
+		withPosts:       eq.withPosts.Clone(),
+		withEventAdmins: eq.withEventAdmins.Clone(),
 		// clone intermediate query.
 		sql:  eq.sql.Clone(),
 		path: eq.path,
@@ -327,6 +352,17 @@ func (eq *EventQuery) WithPosts(opts ...func(*PostQuery)) *EventQuery {
 		opt(query)
 	}
 	eq.withPosts = query
+	return eq
+}
+
+// WithEventAdmins tells the query-builder to eager-load the nodes that are connected to
+// the "event_admins" edge. The optional arguments are used to configure the query builder of the edge.
+func (eq *EventQuery) WithEventAdmins(opts ...func(*EventAdminQuery)) *EventQuery {
+	query := (&EventAdminClient{config: eq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	eq.withEventAdmins = query
 	return eq
 }
 
@@ -409,9 +445,10 @@ func (eq *EventQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Event,
 		nodes       = []*Event{}
 		withFKs     = eq.withFKs
 		_spec       = eq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			eq.withCreatedBy != nil,
 			eq.withPosts != nil,
+			eq.withEventAdmins != nil,
 		}
 	)
 	if eq.withCreatedBy != nil {
@@ -448,6 +485,13 @@ func (eq *EventQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Event,
 		if err := eq.loadPosts(ctx, query, nodes,
 			func(n *Event) { n.Edges.Posts = []*Post{} },
 			func(n *Event, e *Post) { n.Edges.Posts = append(n.Edges.Posts, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := eq.withEventAdmins; query != nil {
+		if err := eq.loadEventAdmins(ctx, query, nodes,
+			func(n *Event) { n.Edges.EventAdmins = []*EventAdmin{} },
+			func(n *Event, e *EventAdmin) { n.Edges.EventAdmins = append(n.Edges.EventAdmins, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -544,6 +588,37 @@ func (eq *EventQuery) loadPosts(ctx context.Context, query *PostQuery, nodes []*
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (eq *EventQuery) loadEventAdmins(ctx context.Context, query *EventAdminQuery, nodes []*Event, init func(*Event), assign func(*Event, *EventAdmin)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Event)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.EventAdmin(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(event.EventAdminsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.event_event_admins
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "event_event_admins" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "event_event_admins" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

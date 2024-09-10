@@ -21,6 +21,18 @@ func (f EventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventMutation", m)
 }
 
+// The EventAdminFunc type is an adapter to allow the use of ordinary
+// function as EventAdmin mutator.
+type EventAdminFunc func(context.Context, *ent.EventAdminMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EventAdminFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EventAdminMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventAdminMutation", m)
+}
+
 // The PostFunc type is an adapter to allow the use of ordinary
 // function as Post mutator.
 type PostFunc func(context.Context, *ent.PostMutation) (ent.Value, error)
@@ -43,18 +55,6 @@ func (f PostImageFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PostImageMutation", m)
-}
-
-// The ReportFunc type is an adapter to allow the use of ordinary
-// function as Report mutator.
-type ReportFunc func(context.Context, *ent.ReportMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f ReportFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.ReportMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ReportMutation", m)
 }
 
 // The UserFunc type is an adapter to allow the use of ordinary

@@ -13,22 +13,22 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/event"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/eventadmin"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/post"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/predicate"
-	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/report"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/user"
 )
 
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx         *QueryContext
-	order       []user.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.User
-	withPosts   *PostQuery
-	withEvents  *EventQuery
-	withReports *ReportQuery
+	ctx             *QueryContext
+	order           []user.OrderOption
+	inters          []Interceptor
+	predicates      []predicate.User
+	withPosts       *PostQuery
+	withEvents      *EventQuery
+	withEventAdmins *EventAdminQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -109,9 +109,9 @@ func (uq *UserQuery) QueryEvents() *EventQuery {
 	return query
 }
 
-// QueryReports chains the current query on the "reports" edge.
-func (uq *UserQuery) QueryReports() *ReportQuery {
-	query := (&ReportClient{config: uq.config}).Query()
+// QueryEventAdmins chains the current query on the "event_admins" edge.
+func (uq *UserQuery) QueryEventAdmins() *EventAdminQuery {
+	query := (&EventAdminClient{config: uq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := uq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -122,8 +122,8 @@ func (uq *UserQuery) QueryReports() *ReportQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
-			sqlgraph.To(report.Table, report.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, user.ReportsTable, user.ReportsPrimaryKey...),
+			sqlgraph.To(eventadmin.Table, eventadmin.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.EventAdminsTable, user.EventAdminsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -318,14 +318,14 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:      uq.config,
-		ctx:         uq.ctx.Clone(),
-		order:       append([]user.OrderOption{}, uq.order...),
-		inters:      append([]Interceptor{}, uq.inters...),
-		predicates:  append([]predicate.User{}, uq.predicates...),
-		withPosts:   uq.withPosts.Clone(),
-		withEvents:  uq.withEvents.Clone(),
-		withReports: uq.withReports.Clone(),
+		config:          uq.config,
+		ctx:             uq.ctx.Clone(),
+		order:           append([]user.OrderOption{}, uq.order...),
+		inters:          append([]Interceptor{}, uq.inters...),
+		predicates:      append([]predicate.User{}, uq.predicates...),
+		withPosts:       uq.withPosts.Clone(),
+		withEvents:      uq.withEvents.Clone(),
+		withEventAdmins: uq.withEventAdmins.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -354,14 +354,14 @@ func (uq *UserQuery) WithEvents(opts ...func(*EventQuery)) *UserQuery {
 	return uq
 }
 
-// WithReports tells the query-builder to eager-load the nodes that are connected to
-// the "reports" edge. The optional arguments are used to configure the query builder of the edge.
-func (uq *UserQuery) WithReports(opts ...func(*ReportQuery)) *UserQuery {
-	query := (&ReportClient{config: uq.config}).Query()
+// WithEventAdmins tells the query-builder to eager-load the nodes that are connected to
+// the "event_admins" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithEventAdmins(opts ...func(*EventAdminQuery)) *UserQuery {
+	query := (&EventAdminClient{config: uq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	uq.withReports = query
+	uq.withEventAdmins = query
 	return uq
 }
 
@@ -446,7 +446,7 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		loadedTypes = [3]bool{
 			uq.withPosts != nil,
 			uq.withEvents != nil,
-			uq.withReports != nil,
+			uq.withEventAdmins != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -481,10 +481,10 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
-	if query := uq.withReports; query != nil {
-		if err := uq.loadReports(ctx, query, nodes,
-			func(n *User) { n.Edges.Reports = []*Report{} },
-			func(n *User, e *Report) { n.Edges.Reports = append(n.Edges.Reports, e) }); err != nil {
+	if query := uq.withEventAdmins; query != nil {
+		if err := uq.loadEventAdmins(ctx, query, nodes,
+			func(n *User) { n.Edges.EventAdmins = []*EventAdmin{} },
+			func(n *User, e *EventAdmin) { n.Edges.EventAdmins = append(n.Edges.EventAdmins, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -583,64 +583,34 @@ func (uq *UserQuery) loadEvents(ctx context.Context, query *EventQuery, nodes []
 	}
 	return nil
 }
-func (uq *UserQuery) loadReports(ctx context.Context, query *ReportQuery, nodes []*User, init func(*User), assign func(*User, *Report)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*User)
-	nids := make(map[int]map[*User]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
+func (uq *UserQuery) loadEventAdmins(ctx context.Context, query *EventAdminQuery, nodes []*User, init func(*User), assign func(*User, *EventAdmin)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
 		if init != nil {
-			init(node)
+			init(nodes[i])
 		}
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(user.ReportsTable)
-		s.Join(joinT).On(s.C(report.FieldID), joinT.C(user.ReportsPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(user.ReportsPrimaryKey[0]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(user.ReportsPrimaryKey[0]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Report](ctx, query, qr, query.inters)
+	query.withFKs = true
+	query.Where(predicate.EventAdmin(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.EventAdminsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		fk := n.user_event_admins
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_event_admins" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected "reports" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "user_event_admins" returned %v for node %v`, *fk, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
+		assign(node, n)
 	}
 	return nil
 }
