@@ -15,7 +15,7 @@ type Post struct {
 
 func (Post) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("comment").NotEmpty(),
+		field.String("content").NotEmpty(),
 		field.Float("location_x"),
 		field.Float("location_y"),
 		field.String("video_url").Optional(),

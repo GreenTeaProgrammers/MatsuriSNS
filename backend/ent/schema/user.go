@@ -15,7 +15,7 @@ func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("username").NotEmpty(),
 		field.String("email").Unique().NotEmpty(),
-		field.String("password_hash").NotEmpty(),
+		field.String("hashed_password").NotEmpty(),
 	}
 }
 

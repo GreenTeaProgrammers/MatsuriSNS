@@ -17,6 +17,8 @@ func (Event) Fields() []ent.Field {
 		field.Text("description").Optional(),
 		field.String("map_url").NotEmpty(),
 		field.String("qr_code_url").Optional(),
+		field.Time("start_time"),
+		field.Time("end_time"),
 	}
 }
 
