@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import Map from '../components/Map';
 import TimeSlider from '../components/TimeSlider'; 
+import SelectedPost from '../components/SelectedPost';
 import webpImage from '../assets/sample_map.webp';
 import data from '../mock/mock_post.json';
 
-type SelectedPost = {
+type SelectedPostType = {
   comment: string;
   createdAt: string;
 } | null;
 
 const MapPage: React.FC = () => {
-  const [selectedPost, setSelectedPost] = useState<SelectedPost>(null);
+  const [selectedPost, setSelectedPost] = useState<SelectedPostType>(null);
   const [sliderValue, setSliderValue] = useState(0);
 
   // データの最小・最大時刻を取得
@@ -53,11 +54,7 @@ const MapPage: React.FC = () => {
         onChange={handleSliderChange}
       />
       {selectedPost && (
-        <div style={{ marginTop: '20px', padding: '10px', border: '1px solid #ccc' }}>
-          <h2>投稿の内容</h2>
-          <p>{selectedPost.comment}</p>
-          <p><strong>投稿時刻:</strong> {new Date(selectedPost.createdAt).toLocaleString()}</p>
-        </div>
+        <SelectedPost comment={selectedPost.comment} createdAt={selectedPost.createdAt} />
       )}
     </div>
   );
