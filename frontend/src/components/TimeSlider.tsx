@@ -19,7 +19,11 @@ const TimeSlider: React.FC<TimeSliderProps> = ({ minTime, maxTime, value, onChan
       max={maxTime}
       value={value}
       onChange={onChange}
-      renderThumb={(props, state) => <div {...props}>{new Date(state.valueNow).toLocaleString()}</div>}
+      renderThumb={(props, state) => (
+        <div {...props}>
+          <div className="thumb-content">{new Date(state.valueNow).toLocaleString()}</div>
+        </div>
+      )}
     />
   );
 };
