@@ -1,0 +1,9 @@
+.map-container {
+  scrollbar-width: none; /* Firefox 用 */
+  -ms-overflow-style: none; /* Internet Explorer 用 */
+}
+
+/* Chrome, Safari, Edge 用 */
+.map-container::-webkit-scrollbar {
+  display: none; 
+}
