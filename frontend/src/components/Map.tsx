@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState} from "react";
 import Pin, { PinProps } from "./Pin";
 import './Map.css';
 
@@ -11,6 +11,7 @@ type MapProps = {
 
 const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
+  const [hiddenPixels, setHiddenPixels] = useState({ hiddenWidth: 0, hiddenHeight: 0 });
 
   useEffect(() => {
     const mapElement = mapRef.current;
@@ -42,6 +43,19 @@ const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 })
       mapElement.scrollTop = scrollTop - walkY;
     };
 
+    const calculateHiddenPixels = () => {
+      if (mapElement) {
+        const hiddenWidth = mapElement.scrollWidth - mapElement.clientWidth; // 隠れている幅
+        const hiddenHeight = mapElement.scrollHeight - mapElement.clientHeight; // 隠れている高さ
+
+        setHiddenPixels({ hiddenWidth, hiddenHeight });
+      }
+    };
+
+    // 初回ロード時とウィンドウリサイズ時に隠れているピクセルを計算
+    calculateHiddenPixels();
+    window.addEventListener('resize', calculateHiddenPixels);
+
     const onMouseUpOrLeave = () => {
       isDragging = false;
       mapElement.style.cursor = 'grab'; // ドラッグ終了時のポインター
@@ -58,8 +72,9 @@ const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 })
       mapElement.removeEventListener('mousemove', onMouseMove);
       mapElement.removeEventListener('mouseup', onMouseUpOrLeave);
       mapElement.removeEventListener('mouseleave', onMouseUpOrLeave);
+	  window.removeEventListener('resize', calculateHiddenPixels);
     };
-  }, []);
+  }, [width, height]);
 
   return (
     <div
@@ -68,7 +83,7 @@ const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 })
       style={{
         width: `${width}px`,
         height: `${height}px`,
-        overflow: 'auto', // スクロールバーを隠す
+        overflow: 'auto', 
         cursor: 'grab', // 初期状態のポインター
         position: 'relative'
       }}
@@ -88,8 +103,15 @@ const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 })
           draggable="false" // 画像のドラッグを無効化
         />
         {pins.map((pin) => (
-          <Pin key={pin.id} {...pin} />
+          <Pin key={pin.id} {...pin} 
+		  maxHorizontalPercentage={(width+hiddenPixels.hiddenWidth) / width * 95} 
+		  maxVerticalPercentage={(height+hiddenPixels.hiddenHeight) / height * 95} />
         ))}
+      </div>
+	  	  <div>
+        {/* 隠れているピクセル数の表示 */}
+        <p>隠れている幅: {hiddenPixels.hiddenWidth}px</p>
+        <p>隠れている高さ: {hiddenPixels.hiddenHeight}px</p>
       </div>
     </div>
   );

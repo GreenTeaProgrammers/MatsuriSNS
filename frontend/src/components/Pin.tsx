@@ -11,10 +11,12 @@ export type PinProps = {
   onClick: (comment: string) => void; // クリック時のハンドラ
   isVisible: boolean; // ピンが表示されるかどうか
   color?: string; // ピンの色を指定するプロパティ（オプショナル）
+   maxHorizontalPercentage?: number; // 最大の水平方向の割合
+  maxVerticalPercentage?: number; // 最大の垂直方向の割合
 };
 
 
-const Pin: React.FC<PinProps> = ({ x, y, comment, onClick, isVisible, color }) => {
+const Pin: React.FC<PinProps> = ({ x, y, comment, onClick, isVisible, color, maxHorizontalPercentage=100, maxVerticalPercentage=100}) => {
   const [shouldRender, setShouldRender] = useState(isVisible);
   const [pinColor, setPinColor] = useState(color || generateRandomColor()); 
 
@@ -43,8 +45,8 @@ const Pin: React.FC<PinProps> = ({ x, y, comment, onClick, isVisible, color }) =
       className={`pin ${isVisible ? '' : 'disappear'}`} // 消える際にアニメーションを適用
       style={{
         position: 'absolute',
-        left: `${clampedX * 100}%`,
-        top: `${(1 - clampedY) * 100}%`, // Y 座標は 1 - y で計算
+        left: `${clampedX * maxHorizontalPercentage}%`,
+        top: `${(1 - clampedY) * maxVerticalPercentage}%`, // Y 座標は 1 - y で計算
         transform: 'translate(-50%, -50%)', // ピンの中心を基準に配置
         cursor: 'pointer',
         pointerEvents: 'auto',
