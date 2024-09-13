@@ -25,3 +25,10 @@
   bottom: 0;
   background: #ddd;
 }
+
+.no-select {
+  user-select: none; /* テキスト選択を無効化 */
+  -webkit-user-select: none; /* Safari 対応 */
+  -moz-user-select: none; /* Firefox 対応 */
+  -ms-user-select: none; /* IE 対応 */
+}

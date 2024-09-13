@@ -108,8 +108,7 @@ const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 })
 		  maxVerticalPercentage={(height+hiddenPixels.hiddenHeight) / height * 95} />
         ))}
       </div>
-	  	  <div>
-        {/* 隠れているピクセル数の表示 */}
+	  	<div className="no-select">
         <p>隠れている幅: {hiddenPixels.hiddenWidth}px</p>
         <p>隠れている高さ: {hiddenPixels.hiddenHeight}px</p>
       </div>
