@@ -1,13 +1,15 @@
 import React from 'react';
 import Map from '../components/Map';
 import webpImage from '../assets/sample_map.webp';
+import mockData from '../mock/mock_post.json';
 
 const MapPage: React.FC = () => {
-  const pins = [
-    { id: 'pin1', x: 0.2, y: 0.3 },
-    { id: 'pin2', x: 0.5, y: 0.5 },
-    { id: 'pin3', x: 0.8, y: 0.7 },
-  ];
+
+   const pins = mockData.map((item, index) => ({
+    id: `pin${index + 1}`, //TODO: スキーマに連番が含まれる      
+    x: item.location_x,         
+    y: item.location_y          
+  }));
 
   return (
     <div>
