@@ -22,10 +22,21 @@ const Pin: React.FC<PinProps> = ({ x, y, comment, onClick }) => {
         transform: 'translate(-50%, -50%)',
         cursor: 'pointer', // マウスカーソルをポインターに
         pointerEvents: 'auto', // クリックイベントを受け取るように
+        userSelect: 'none', // ピンの選択を無効化
       }}
       onClick={() => onClick(comment)} // クリック時にコメントを渡す
     >
-      <img src={pinIcon} alt="ピン" style={{ width: '24px', height: '24px' }} />
+      <img
+        src={pinIcon}
+        alt="ピン"
+        style={{
+          width: '24px',
+          height: '24px',
+          userSelect: 'none',  // 画像の選択を無効化
+          pointerEvents: 'none', // 画像自体はクリックイベントを受け取らない
+        }}
+        draggable="false" // 画像のドラッグを無効化
+      />
     </div>
   );
 };
