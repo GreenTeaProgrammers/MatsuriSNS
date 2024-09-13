@@ -68,7 +68,7 @@ const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 })
       style={{
         width: `${width}px`,
         height: `${height}px`,
-        overflow: 'hidden', // スクロールバーを隠す
+        overflow: 'auto', // スクロールバーを隠す
         cursor: 'grab', // 初期状態のポインター
         position: 'relative'
       }}

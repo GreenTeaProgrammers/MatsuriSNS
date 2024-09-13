@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import pinIcon from "../assets/pin.svg";
+import pinIcon from "../assets/pin.svg"; // SVG のパスを指定
 import './Pin.css'; 
+import { generateRandomColor } from "../util/ColorUtils";
 
 export type PinProps = {
   x: number;
@@ -9,10 +10,13 @@ export type PinProps = {
   comment: string;
   onClick: (comment: string) => void; // クリック時のハンドラ
   isVisible: boolean; // ピンが表示されるかどうか
+  color?: string; // ピンの色を指定するプロパティ（オプショナル）
 };
 
-const Pin: React.FC<PinProps> = ({ x, y, comment, onClick, isVisible }) => {
+
+const Pin: React.FC<PinProps> = ({ x, y, comment, onClick, isVisible, color }) => {
   const [shouldRender, setShouldRender] = useState(isVisible);
+  const [pinColor, setPinColor] = useState(color || generateRandomColor()); 
 
   useEffect(() => {
     if (isVisible) {
@@ -26,6 +30,7 @@ const Pin: React.FC<PinProps> = ({ x, y, comment, onClick, isVisible }) => {
     }
   };
 
+  // x, y の値を 0〜1 の範囲でクランプする
   const clampedX = Math.max(0, Math.min(1, x));
   const clampedY = Math.max(0, Math.min(1, y));
 
@@ -39,27 +44,26 @@ const Pin: React.FC<PinProps> = ({ x, y, comment, onClick, isVisible }) => {
       style={{
         position: 'absolute',
         left: `${clampedX * 100}%`,
-        top: `${(1 - clampedY) * 100}%`,
-        transform: 'translate(-50%, -50%)',
+        top: `${(1 - clampedY) * 100}%`, // Y 座標は 1 - y で計算
+        transform: 'translate(-50%, -50%)', // ピンの中心を基準に配置
         cursor: 'pointer',
         pointerEvents: 'auto',
         userSelect: 'none',
+        width: '24px',
+        height: '24px',
+        backgroundColor: pinColor, // 背景色を設定
+        maskImage: `url(${pinIcon})`, // SVG をマスクとして使用
+        maskSize: 'contain', // マスクのサイズを調整
+        maskPosition: 'center', // マスクの位置を中央に設定
+        maskRepeat: 'no-repeat', // マスクの繰り返しを防止
+        WebkitMaskImage: `url(${pinIcon})`, // Webkit 対応のため
+        WebkitMaskSize: 'contain', // Webkit 対応のため
+        WebkitMaskPosition: 'center', // Webkit 対応のため
+        WebkitMaskRepeat: 'no-repeat', // Webkit 対応のため
       }}
       onClick={() => onClick(comment)}
       onAnimationEnd={handleAnimationEnd} // アニメーション終了時に処理を実行
-    >
-      <img
-        src={pinIcon}
-        alt="ピン"
-        style={{
-          width: '24px',
-          height: '24px',
-          userSelect: 'none',
-          pointerEvents: 'none',
-        }}
-        draggable="false"
-      />
-    </div>
+    />
   );
 };
 
