@@ -1,11 +1,12 @@
 import React from "react";
 import pinIcon from "../assets/pin.svg";
+import './Pin.css'; // CSSファイルをインポート
 
 export type PinProps = {
   x: number;
   y: number;
   id: string;
-  comment: string; // クリック時に表示する投稿の内容
+  comment: string;
   onClick: (comment: string) => void; // クリック時のハンドラ
 };
 
@@ -15,6 +16,7 @@ const Pin: React.FC<PinProps> = ({ x, y, comment, onClick }) => {
 
   return (
     <div
+      className="pin" // アニメーション用のクラスを追加
       style={{
         position: 'absolute',
         left: `${clampedX * 100}%`,
