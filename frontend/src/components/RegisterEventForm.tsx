@@ -6,6 +6,7 @@ const RegisterEventForm: React.FC = () => {
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [venueImage, setVenueImage] = useState<File | null>(null); // 会場図の画像を管理するステート
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault(); // フォームのデフォルトの送信動作を防止
@@ -13,10 +14,20 @@ const RegisterEventForm: React.FC = () => {
     // フォームデータの処理をここに追加します
     console.log('イベント名:', eventName);
     console.log('説明:', description);
-    console.log('開始日:', startDate);
-    console.log('終了日:', endDate);
+    console.log('開始日時:', startDate);
+    console.log('終了日時:', endDate);
+
+    if (venueImage) {
+      console.log('会場図:', venueImage.name);
+    }
 
     // TODO: 実際の登録処理を追加
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setVenueImage(e.target.files[0]); // 最初のファイルをセット
+    }
   };
 
   return (
@@ -43,7 +54,7 @@ const RegisterEventForm: React.FC = () => {
         <label htmlFor="startDate">開始日時</label>
         <input
           id="startDate"
-          type="datetime-local" // datetime-localで日付と時間を入力
+          type="datetime-local"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
         />
@@ -51,11 +62,19 @@ const RegisterEventForm: React.FC = () => {
         <label htmlFor="endDate">終了日時</label>
         <input
           id="endDate"
-          type="datetime-local" // datetime-localで日付と時間を入力
+          type="datetime-local"
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
         />
-        
+
+        <label htmlFor="venueImage">会場図の画像</label>
+        <input
+          id="venueImage"
+          type="file"
+          accept="image/*" // 画像ファイルのみを選択可能にする
+          onChange={handleFileChange}
+        />
+
         <button type="submit">Register</button>
       </form>
     </div>
