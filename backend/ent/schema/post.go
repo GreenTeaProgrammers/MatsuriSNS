@@ -26,10 +26,12 @@ func (Post) Fields() []ent.Field {
 
 func (Post) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", User.Type).
-			Ref("post"),
-		edge.From("event", Event.Type).
-			Ref("post"),
-		edge.To("image", PostImage.Type),
+		edge.From("user", User.Type). // Ensure the inverse edge matches in User
+						Ref("posts"). // Use plural for consistency
+						Unique(),
+		edge.From("event", Event.Type). // Ensure the inverse edge matches in Event
+						Ref("posts"),
+		edge.To("images", PostImage.Type). // Ensure the edge to PostImage is correct
+							Unique(),
 	}
 }

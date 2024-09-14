@@ -25,8 +25,8 @@ func (User) Fields() []ent.Field {
 
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("post", Post.Type),
-		edge.To("event", Event.Type),
-		edge.To("event_admin", EventAdmin.Type),
+		edge.To("posts", Post.Type),              // Matches the edge in Post
+		edge.To("events", Event.Type),            // Matches the edge in Event
+		edge.To("event_admins", EventAdmin.Type), // Matches the edge in EventAdmin
 	}
 }
