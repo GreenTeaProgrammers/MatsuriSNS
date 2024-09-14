@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"log"
-
-	"github.com/GreenTeaProgrammers/MatsuriSNS/ent"
+	"net/http"
 
 	"github.com/GreenTeaProgrammers/MatsuriSNS/config"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/ent"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/middlewares"
+	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -30,15 +32,21 @@ func main() {
 		log.Fatalf("failed to create schema: %v", err)
 	}
 
-	// ユーザーを作成できるか確認用
-	// user, err := client.User.
-	// 	Create().
-	// 	SetUsername("testuser").
-	// 	SetEmail("testuser2@example.com").
-	// 	SetPasswordHash("hashed_password").
-	// 	Save(context.Background())
-	// if err != nil {
-	// 	log.Fatalf("failed to create user: %v", err)
-	// }
-	// fmt.Printf("User created: %v\n", user)
+	// Ginのインスタンスを作成
+	r := gin.Default()
+
+	// ミドルウェアの適用
+	r.Use(middlewares.LoggerMiddleware())
+	r.Use(middlewares.CORSMiddleware())
+	r.Use(middlewares.RecoveryMiddleware())
+
+	// 確認用のルート
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"message": "Hello from MatsuriSNS"})
+	})
+
+	// サーバーをポート8080で起動
+	if err := r.Run(":8080"); err != nil {
+		log.Fatalf("failed to run Gin server: %v", err)
+	}
 }
