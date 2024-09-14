@@ -90,6 +90,7 @@ const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 })
     >
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
         <img
+		  className="map-image"
           src={path}
           alt="会場地図"
           style={{
