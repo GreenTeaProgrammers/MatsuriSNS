@@ -44,6 +44,14 @@
   box-sizing: border-box; /* paddingとborderを含めて幅を計算 */
 }
 
+.char-counter {
+  width: 100%;
+  text-align: right; /* カウンターを右寄せ */
+  font-size: 12px;
+  color: #bbbbbb; /* カウンターの色を淡く */
+  margin-bottom: 10px; /* 下のボタンとの余白 */
+}
+
 .overlay-buttons {
   display: flex;
   justify-content: flex-end;
@@ -65,7 +73,7 @@
 }
 
 .overlay-buttons button:first-of-type:hover {
-  background-color: #c13c3c; /* ホバー時に赤くする */
+  background-color: #ff4d4d; /* ホバー時に赤くする */
   color: #fff; /* テキストを白く */
 }
 

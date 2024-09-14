@@ -6,16 +6,25 @@ type PostOverlayProps = {
   onSubmit: (content: string) => void; // 投稿内容を送信するハンドラ
 };
 
+const MAX_CHAR_LIMIT = 140; // 最大文字数
+
 const PostOverlay: React.FC<PostOverlayProps> = ({ onClose, onSubmit }) => {
   const [content, setContent] = useState('');
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
+    // 文字数制限のバリデーション
+    if (e.target.value.length <= MAX_CHAR_LIMIT) {
+      setContent(e.target.value);
+    }
   };
 
   const handleSubmit = () => {
-    onSubmit(content);
-    onClose(); // 投稿後にオーバーレイを閉じる
+    if (content.length > 0) {
+      onSubmit(content);
+      onClose(); // 投稿後にオーバーレイを閉じる
+    } else {
+      alert('投稿内容を入力してください。');
+    }
   };
 
   return (
@@ -27,6 +36,9 @@ const PostOverlay: React.FC<PostOverlayProps> = ({ onClose, onSubmit }) => {
           onChange={handleContentChange}
           placeholder="投稿内容を入力してください..."
         />
+        <div className="char-counter">
+          {content.length} / {MAX_CHAR_LIMIT} 文字
+        </div>
         <div className="overlay-buttons">
           <button onClick={onClose}>キャンセル</button>
           <button onClick={handleSubmit}>投稿する</button>
