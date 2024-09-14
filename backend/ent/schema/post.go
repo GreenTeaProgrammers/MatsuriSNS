@@ -15,6 +15,7 @@ type Post struct {
 
 func (Post) Fields() []ent.Field {
 	return []ent.Field{
+		field.Int("user_id"),
 		field.String("content").NotEmpty(),
 		field.Float("location_x"),
 		field.Float("location_y"),
@@ -28,6 +29,8 @@ func (Post) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("user", User.Type). // Ensure the inverse edge matches in User
 						Ref("posts"). // Use plural for consistency
+						Field("user_id").
+						Required().
 						Unique(),
 		edge.From("event", Event.Type). // Ensure the inverse edge matches in Event
 						Ref("posts"),
