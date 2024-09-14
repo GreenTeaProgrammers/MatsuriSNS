@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState} from "react";
 import Pin, { PinProps } from "./Pin";
-import './Map.css';
+import './css/Map.css';
 
 type MapProps = {
   src: string;
@@ -108,7 +108,7 @@ const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 })
 		  maxVerticalPercentage={(height+hiddenPixels.hiddenHeight) / height * 95} />
         ))}
       </div>
-	  	<div className="no-select">
+	   <div className="no-select">
         <p>隠れている幅: {hiddenPixels.hiddenWidth}px</p>
         <p>隠れている高さ: {hiddenPixels.hiddenHeight}px</p>
       </div>

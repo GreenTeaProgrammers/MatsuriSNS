@@ -4,6 +4,7 @@ import TimeSlider from '../components/TimeSlider';
 import SelectedPost from '../components/SelectedPost';
 import webpImage from '../assets/sample_map.webp';
 import data from '../mock/mock_post.json';
+import PostButton from '../components/PostButton';
 
 type SelectedPostType = {
   comment: string;
@@ -18,6 +19,7 @@ const MapPage: React.FC = () => {
   const minTime = new Date(data[0].created_at).getTime();
   const maxTime = new Date(data[data.length - 1].created_at).getTime();
 
+  // NOTE: 本来はフェッチしてくる
   // JSONデータからピンデータを生成
   const pins = data.map((item, index) => ({
     id: `pin${index + 1}`,
@@ -40,6 +42,7 @@ const MapPage: React.FC = () => {
   return (
     <div>
       <h1>MapPage</h1>
+      <PostButton />
       <Map
         src={webpImage}
         pins={pins.map(pin => ({

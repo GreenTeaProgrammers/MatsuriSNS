@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import pinIcon from "../assets/pin.svg"; // SVG のパスを指定
-import './Pin.css'; 
+import './css/Pin.css'; 
 import { generateRandomColor } from "../util/ColorUtils";
 
 export type PinProps = {
