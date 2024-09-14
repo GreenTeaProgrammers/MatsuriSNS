@@ -13,8 +13,14 @@ const PostButton: React.FC = () => {
     setIsOverlayVisible(false);
   };
 
-  const handlePostSubmit = (content: string) => {
-    alert(`投稿しました: ${content}`); // TODO: 実際の投稿処理をここに追加
+  // 座標も受け取るように修正
+  const handlePostSubmit = (content: string, pinPosition?: { x: string; y: string }) => {
+    if (pinPosition) {
+      alert(`投稿しました: ${content}\nピンの位置: x=${pinPosition.x}, y=${pinPosition.y}`);
+    } else {
+      alert(`投稿しました: ${content}`);
+    }
+    // TODO: 実際の投稿処理をここに追加
   };
 
   return (
@@ -25,7 +31,7 @@ const PostButton: React.FC = () => {
       {isOverlayVisible && (
         <PostOverlay
           onClose={handleCloseOverlay}
-          onSubmit={handlePostSubmit}
+          onSubmit={handlePostSubmit} // handlePostSubmitを渡す
         />
       )}
     </div>

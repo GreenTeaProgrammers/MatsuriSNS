@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import Map from './Map'; 
 import './css/PostOverlay.css'; 
-import webpImage from '../assets/sample_map.webp'; //TODO: 画像はフェッチしてくる
+import webpImage from '../assets/sample_map.webp'; // TODO: 画像はフェッチしてくる
 import { PinProps } from './Pin';
 
 type PostOverlayProps = {
   onClose: () => void; // オーバーレイを閉じるハンドラ
-  onSubmit: (content: string) => void; // 投稿内容を送信するハンドラ
+  onSubmit: (content: string, pinPosition?: { x: string; y: string }) => void; // 投稿内容とピンの座標を送信するハンドラ
 };
-
 
 const MAX_CHAR_LIMIT = 140; // 最大文字数
 
@@ -41,8 +40,6 @@ const PostOverlay: React.FC<PostOverlayProps> = ({ onClose, onSubmit }) => {
     const x = (e.clientX - mapElement.left + scrollLeft) / totalWidth;
     const y = 1 - (e.clientY - mapElement.top + scrollTop) / totalHeight; 
 
-    // const x = (e.clientX - mapElement.left + scrollLeft) / (clientWidth + hiddenWidth);
-    // const y = 1 - (e.clientY - mapElement.top + scrollTop) / (clientHeight + hiddenHeight)   
     console.log(`x: ${x}, y: ${y}`);
 
     const newPin: PinProps = {
@@ -56,12 +53,20 @@ const PostOverlay: React.FC<PostOverlayProps> = ({ onClose, onSubmit }) => {
       maxVerticalPercentage: (clientHeight + hiddenHeight) / clientHeight * 95,
     };
 
-    setPins([...pins, newPin]); // 新しいピンを追加
+    // 既存のピンをクリアして新しいピンだけをセットする
+    setPins([newPin]);
   };
 
   const handleSubmit = () => {
     if (content.length > 0) {
-      onSubmit(content);
+      if (pins.length > 0) {
+        const pin = pins[0];
+        const roundedX = pin.x.toFixed(2); // x座標を小数点以下2桁に丸める
+        const roundedY = pin.y.toFixed(2); // y座標を小数点以下2桁に丸める
+        onSubmit(content, { x: roundedX, y: roundedY }); // 座標と共に投稿内容を送信
+      } else {
+        onSubmit(content); // ピンがない場合は投稿内容のみを送信
+      }
       onClose(); // 投稿後にオーバーレイを閉じる
     } else {
       alert('投稿内容を入力してください。');
