@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState} from "react";
+import React, { useRef, useEffect, useState } from "react";
 import Pin, { PinProps } from "./Pin";
 import './css/Map.css';
 
@@ -7,9 +7,10 @@ type MapProps = {
   pins: PinProps[];
   width?: number;
   height?: number;
+  onClick?: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void; // クリックハンドラを追加
 };
 
-const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 }) => {
+const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400, onClick }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [hiddenPixels, setHiddenPixels] = useState({ hiddenWidth: 0, hiddenHeight: 0 });
 
@@ -52,7 +53,6 @@ const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 })
       }
     };
 
-    // 初回ロード時とウィンドウリサイズ時に隠れているピクセルを計算
     calculateHiddenPixels();
     window.addEventListener('resize', calculateHiddenPixels);
 
@@ -66,13 +66,12 @@ const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 })
     mapElement.addEventListener('mouseup', onMouseUpOrLeave);
     mapElement.addEventListener('mouseleave', onMouseUpOrLeave);
 
-    // クリーンアップ
     return () => {
       mapElement.removeEventListener('mousedown', onMouseDown);
       mapElement.removeEventListener('mousemove', onMouseMove);
       mapElement.removeEventListener('mouseup', onMouseUpOrLeave);
       mapElement.removeEventListener('mouseleave', onMouseUpOrLeave);
-	  window.removeEventListener('resize', calculateHiddenPixels);
+      window.removeEventListener('resize', calculateHiddenPixels);
     };
   }, [width, height]);
 
@@ -83,14 +82,15 @@ const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 })
       style={{
         width: `${width}px`,
         height: `${height}px`,
-        overflow: 'auto', 
-        cursor: 'grab', // 初期状態のポインター
-        position: 'relative'
+        overflow: 'auto',
+        cursor: 'grab',
+        position: 'relative',
       }}
+      onClick={onClick} // マップクリック時にイベントを発火
     >
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
         <img
-		  className="map-image"
+          className="map-image"
           src={path}
           alt="会場地図"
           style={{
@@ -98,18 +98,16 @@ const Map: React.FC<MapProps> = ({ src: path, pins, width = 500, height = 400 })
             width: '100%',
             height: 'auto',
             objectFit: 'cover',
-            userSelect: 'none',  // 画像の選択を無効化
-            pointerEvents: 'none', // ポインターイベントを無効化
+            userSelect: 'none',
+            pointerEvents: 'none',
           }}
           draggable="false" // 画像のドラッグを無効化
         />
         {pins.map((pin) => (
-          <Pin key={pin.id} {...pin} 
-		  maxHorizontalPercentage={(width+hiddenPixels.hiddenWidth) / width * 95} 
-		  maxVerticalPercentage={(height+hiddenPixels.hiddenHeight) / height * 95} />
+          <Pin key={pin.id} {...pin} />
         ))}
       </div>
-	   <div className="no-select">
+      <div className="no-select">
         <p>隠れている幅: {hiddenPixels.hiddenWidth}px</p>
         <p>隠れている高さ: {hiddenPixels.hiddenHeight}px</p>
       </div>

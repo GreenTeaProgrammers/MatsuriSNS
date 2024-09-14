@@ -18,7 +18,7 @@ export type PinProps = {
 
 const Pin: React.FC<PinProps> = ({ x, y, comment, onClick, isVisible, color, maxHorizontalPercentage=100, maxVerticalPercentage=100}) => {
   const [shouldRender, setShouldRender] = useState(isVisible);
-  const [pinColor, setPinColor] = useState(color || generateRandomColor()); 
+  const [pinColor] = useState(color || generateRandomColor()); 
 
   useEffect(() => {
     if (isVisible) {
