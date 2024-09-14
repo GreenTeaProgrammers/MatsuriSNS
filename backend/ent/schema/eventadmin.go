@@ -15,6 +15,8 @@ type EventAdmin struct {
 
 func (EventAdmin) Fields() []ent.Field {
 	return []ent.Field{
+		field.Int("event_id"),
+		field.Int("user_id"),
 		field.Time("created_at").Default(time.Now),
 	}
 }

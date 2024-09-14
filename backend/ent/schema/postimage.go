@@ -15,6 +15,7 @@ type PostImage struct {
 
 func (PostImage) Fields() []ent.Field {
 	return []ent.Field{
+		field.Int("post_id"),
 		field.String("image_url").NotEmpty(),
 		field.Time("created_at").Default(time.Now),
 	}
