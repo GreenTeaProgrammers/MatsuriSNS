@@ -1,6 +1,11 @@
+import RegisterEventForm from "../components/RegisterEventForm";
+
 const RegisterEventPage = () => {
 	return (
-		<h1>Register Event Page</h1>
+		<div>
+			<h1>Register Event Page</h1>
+			<RegisterEventForm />	
+		</div>
 	);
 }
 
