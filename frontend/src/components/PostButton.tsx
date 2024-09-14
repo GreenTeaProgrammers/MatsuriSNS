@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import PostOverlay from './PostOverlay';
 import './css/PostButton.css'; 
 
@@ -31,7 +31,7 @@ const PostButton: React.FC = () => {
       {isOverlayVisible && (
         <PostOverlay
           onClose={handleCloseOverlay}
-          onSubmit={handlePostSubmit} // handlePostSubmitを渡す
+          onSubmit={handlePostSubmit} 
         />
       )}
     </div>

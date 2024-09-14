@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import pinIcon from "../assets/pin.svg"; // SVG のパスを指定
 import './css/Pin.css'; 
 import { generateRandomColor } from "../util/ColorUtils";
