@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PostOverlay from './PostOverlay';
+import './css/PostButton.css'; 
 
 const PostButton: React.FC = () => {
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
@@ -18,7 +19,7 @@ const PostButton: React.FC = () => {
 
   return (
     <div>
-      <button onClick={handleOpenOverlay}>
+      <button className="post-button" onClick={handleOpenOverlay}>
         投稿する
       </button>
       {isOverlayVisible && (
