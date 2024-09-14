@@ -67,11 +67,12 @@ const RegisterEventForm: React.FC = () => {
           onChange={(e) => setEndDate(e.target.value)}
         />
 
+		{/* バックエンドちゃんと書かないととても脆弱 */}
         <label htmlFor="venueImage">会場図の画像</label>
         <input
           id="venueImage"
           type="file"
-          accept="image/*" // 画像ファイルのみを選択可能にする
+          accept="image/*" 
           onChange={handleFileChange}
         />
 
