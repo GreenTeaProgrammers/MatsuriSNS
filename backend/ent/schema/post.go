@@ -27,9 +27,9 @@ func (Post) Fields() []ent.Field {
 func (Post) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("user", User.Type).
-			Ref("posts"),
+			Ref("post"),
 		edge.From("event", Event.Type).
-			Ref("posts"),
-		edge.To("images", PostImage.Type),
+			Ref("post"),
+		edge.To("image", PostImage.Type),
 	}
 }

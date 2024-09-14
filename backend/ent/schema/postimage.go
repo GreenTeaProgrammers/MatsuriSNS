@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -14,6 +16,7 @@ type PostImage struct {
 func (PostImage) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("image_url").NotEmpty(),
+		field.Time("created_at").Default(time.Now),
 	}
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent"
@@ -31,14 +32,14 @@ func main() {
 	}
 
 	// ユーザーを作成できるか確認用
-	// user, err := client.User.
-	// 	Create().
-	// 	SetUsername("testuser").
-	// 	SetEmail("testuser@example.com").
-	// 	SetPasswordHash("hashed_password").
-	// 	Save(context.Background())
-	// if err != nil {
-	// 	log.Fatalf("failed to create user: %v", err)
-	// }
-	// fmt.Printf("User created: %v\n", user)
+	user, err := client.User.
+		Create().
+		SetUsername("testuser").
+		SetEmail("testuser2@example.com").
+		SetPasswordHash("hashed_password").
+		Save(context.Background())
+	if err != nil {
+		log.Fatalf("failed to create user: %v", err)
+	}
+	fmt.Printf("User created: %v\n", user)
 }
