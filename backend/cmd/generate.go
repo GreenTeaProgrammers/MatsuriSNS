@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	err := entc.Generate("./ent/schema", &gen.Config{
+	err := entc.Generate("../ent/schema", &gen.Config{
 		Target: "./ent",
 	})
 	if err != nil {
