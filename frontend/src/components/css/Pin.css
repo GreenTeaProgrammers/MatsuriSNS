@@ -1,0 +1,29 @@
+@keyframes pinAppear {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pinDisappear {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+.pin {
+  animation: pinAppear 0.3s ease-out forwards;
+}
+
+.pin.disappear {
+  animation: pinDisappear 0.3s ease-out forwards;
+}
