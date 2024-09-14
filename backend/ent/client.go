@@ -699,7 +699,7 @@ func (c *PostClient) QueryUser(po *Post) *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(post.Table, post.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, post.UserTable, post.UserPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, post.UserTable, post.UserColumn),
 		)
 		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
 		return fromV, nil
@@ -731,7 +731,7 @@ func (c *PostClient) QueryImages(po *Post) *PostImageQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(post.Table, post.FieldID, id),
 			sqlgraph.To(postimage.Table, postimage.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, post.ImagesTable, post.ImagesColumn),
+			sqlgraph.Edge(sqlgraph.O2O, false, post.ImagesTable, post.ImagesColumn),
 		)
 		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
 		return fromV, nil
@@ -880,7 +880,7 @@ func (c *PostImageClient) QueryPost(pi *PostImage) *PostQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(postimage.Table, postimage.FieldID, id),
 			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, postimage.PostTable, postimage.PostColumn),
+			sqlgraph.Edge(sqlgraph.O2O, true, postimage.PostTable, postimage.PostColumn),
 		)
 		fromV = sqlgraph.Neighbors(pi.driver.Dialect(), step)
 		return fromV, nil
@@ -1029,7 +1029,7 @@ func (c *UserClient) QueryPosts(u *User) *PostQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, user.PostsTable, user.PostsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PostsTable, user.PostsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

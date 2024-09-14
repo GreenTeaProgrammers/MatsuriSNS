@@ -30,6 +30,48 @@ func (eau *EventAdminUpdate) Where(ps ...predicate.EventAdmin) *EventAdminUpdate
 	return eau
 }
 
+// SetEventID sets the "event_id" field.
+func (eau *EventAdminUpdate) SetEventID(i int) *EventAdminUpdate {
+	eau.mutation.ResetEventID()
+	eau.mutation.SetEventID(i)
+	return eau
+}
+
+// SetNillableEventID sets the "event_id" field if the given value is not nil.
+func (eau *EventAdminUpdate) SetNillableEventID(i *int) *EventAdminUpdate {
+	if i != nil {
+		eau.SetEventID(*i)
+	}
+	return eau
+}
+
+// AddEventID adds i to the "event_id" field.
+func (eau *EventAdminUpdate) AddEventID(i int) *EventAdminUpdate {
+	eau.mutation.AddEventID(i)
+	return eau
+}
+
+// SetUserID sets the "user_id" field.
+func (eau *EventAdminUpdate) SetUserID(i int) *EventAdminUpdate {
+	eau.mutation.ResetUserID()
+	eau.mutation.SetUserID(i)
+	return eau
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (eau *EventAdminUpdate) SetNillableUserID(i *int) *EventAdminUpdate {
+	if i != nil {
+		eau.SetUserID(*i)
+	}
+	return eau
+}
+
+// AddUserID adds i to the "user_id" field.
+func (eau *EventAdminUpdate) AddUserID(i int) *EventAdminUpdate {
+	eau.mutation.AddUserID(i)
+	return eau
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (eau *EventAdminUpdate) SetCreatedAt(t time.Time) *EventAdminUpdate {
 	eau.mutation.SetCreatedAt(t)
@@ -135,6 +177,18 @@ func (eau *EventAdminUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := eau.mutation.EventID(); ok {
+		_spec.SetField(eventadmin.FieldEventID, field.TypeInt, value)
+	}
+	if value, ok := eau.mutation.AddedEventID(); ok {
+		_spec.AddField(eventadmin.FieldEventID, field.TypeInt, value)
+	}
+	if value, ok := eau.mutation.UserID(); ok {
+		_spec.SetField(eventadmin.FieldUserID, field.TypeInt, value)
+	}
+	if value, ok := eau.mutation.AddedUserID(); ok {
+		_spec.AddField(eventadmin.FieldUserID, field.TypeInt, value)
+	}
 	if value, ok := eau.mutation.CreatedAt(); ok {
 		_spec.SetField(eventadmin.FieldCreatedAt, field.TypeTime, value)
 	}
@@ -214,6 +268,48 @@ type EventAdminUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *EventAdminMutation
+}
+
+// SetEventID sets the "event_id" field.
+func (eauo *EventAdminUpdateOne) SetEventID(i int) *EventAdminUpdateOne {
+	eauo.mutation.ResetEventID()
+	eauo.mutation.SetEventID(i)
+	return eauo
+}
+
+// SetNillableEventID sets the "event_id" field if the given value is not nil.
+func (eauo *EventAdminUpdateOne) SetNillableEventID(i *int) *EventAdminUpdateOne {
+	if i != nil {
+		eauo.SetEventID(*i)
+	}
+	return eauo
+}
+
+// AddEventID adds i to the "event_id" field.
+func (eauo *EventAdminUpdateOne) AddEventID(i int) *EventAdminUpdateOne {
+	eauo.mutation.AddEventID(i)
+	return eauo
+}
+
+// SetUserID sets the "user_id" field.
+func (eauo *EventAdminUpdateOne) SetUserID(i int) *EventAdminUpdateOne {
+	eauo.mutation.ResetUserID()
+	eauo.mutation.SetUserID(i)
+	return eauo
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (eauo *EventAdminUpdateOne) SetNillableUserID(i *int) *EventAdminUpdateOne {
+	if i != nil {
+		eauo.SetUserID(*i)
+	}
+	return eauo
+}
+
+// AddUserID adds i to the "user_id" field.
+func (eauo *EventAdminUpdateOne) AddUserID(i int) *EventAdminUpdateOne {
+	eauo.mutation.AddUserID(i)
+	return eauo
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -350,6 +446,18 @@ func (eauo *EventAdminUpdateOne) sqlSave(ctx context.Context) (_node *EventAdmin
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := eauo.mutation.EventID(); ok {
+		_spec.SetField(eventadmin.FieldEventID, field.TypeInt, value)
+	}
+	if value, ok := eauo.mutation.AddedEventID(); ok {
+		_spec.AddField(eventadmin.FieldEventID, field.TypeInt, value)
+	}
+	if value, ok := eauo.mutation.UserID(); ok {
+		_spec.SetField(eventadmin.FieldUserID, field.TypeInt, value)
+	}
+	if value, ok := eauo.mutation.AddedUserID(); ok {
+		_spec.AddField(eventadmin.FieldUserID, field.TypeInt, value)
 	}
 	if value, ok := eauo.mutation.CreatedAt(); ok {
 		_spec.SetField(eventadmin.FieldCreatedAt, field.TypeTime, value)

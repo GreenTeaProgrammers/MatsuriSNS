@@ -55,9 +55,14 @@ func IDLTE(id int) predicate.Post {
 	return predicate.Post(sql.FieldLTE(FieldID, id))
 }
 
-// Comment applies equality check predicate on the "comment" field. It's identical to CommentEQ.
-func Comment(v string) predicate.Post {
-	return predicate.Post(sql.FieldEQ(FieldComment, v))
+// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
+func UserID(v int) predicate.Post {
+	return predicate.Post(sql.FieldEQ(FieldUserID, v))
+}
+
+// Content applies equality check predicate on the "content" field. It's identical to ContentEQ.
+func Content(v string) predicate.Post {
+	return predicate.Post(sql.FieldEQ(FieldContent, v))
 }
 
 // LocationX applies equality check predicate on the "location_x" field. It's identical to LocationXEQ.
@@ -85,69 +90,89 @@ func UpdatedAt(v time.Time) predicate.Post {
 	return predicate.Post(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
-// CommentEQ applies the EQ predicate on the "comment" field.
-func CommentEQ(v string) predicate.Post {
-	return predicate.Post(sql.FieldEQ(FieldComment, v))
+// UserIDEQ applies the EQ predicate on the "user_id" field.
+func UserIDEQ(v int) predicate.Post {
+	return predicate.Post(sql.FieldEQ(FieldUserID, v))
 }
 
-// CommentNEQ applies the NEQ predicate on the "comment" field.
-func CommentNEQ(v string) predicate.Post {
-	return predicate.Post(sql.FieldNEQ(FieldComment, v))
+// UserIDNEQ applies the NEQ predicate on the "user_id" field.
+func UserIDNEQ(v int) predicate.Post {
+	return predicate.Post(sql.FieldNEQ(FieldUserID, v))
 }
 
-// CommentIn applies the In predicate on the "comment" field.
-func CommentIn(vs ...string) predicate.Post {
-	return predicate.Post(sql.FieldIn(FieldComment, vs...))
+// UserIDIn applies the In predicate on the "user_id" field.
+func UserIDIn(vs ...int) predicate.Post {
+	return predicate.Post(sql.FieldIn(FieldUserID, vs...))
 }
 
-// CommentNotIn applies the NotIn predicate on the "comment" field.
-func CommentNotIn(vs ...string) predicate.Post {
-	return predicate.Post(sql.FieldNotIn(FieldComment, vs...))
+// UserIDNotIn applies the NotIn predicate on the "user_id" field.
+func UserIDNotIn(vs ...int) predicate.Post {
+	return predicate.Post(sql.FieldNotIn(FieldUserID, vs...))
 }
 
-// CommentGT applies the GT predicate on the "comment" field.
-func CommentGT(v string) predicate.Post {
-	return predicate.Post(sql.FieldGT(FieldComment, v))
+// ContentEQ applies the EQ predicate on the "content" field.
+func ContentEQ(v string) predicate.Post {
+	return predicate.Post(sql.FieldEQ(FieldContent, v))
 }
 
-// CommentGTE applies the GTE predicate on the "comment" field.
-func CommentGTE(v string) predicate.Post {
-	return predicate.Post(sql.FieldGTE(FieldComment, v))
+// ContentNEQ applies the NEQ predicate on the "content" field.
+func ContentNEQ(v string) predicate.Post {
+	return predicate.Post(sql.FieldNEQ(FieldContent, v))
 }
 
-// CommentLT applies the LT predicate on the "comment" field.
-func CommentLT(v string) predicate.Post {
-	return predicate.Post(sql.FieldLT(FieldComment, v))
+// ContentIn applies the In predicate on the "content" field.
+func ContentIn(vs ...string) predicate.Post {
+	return predicate.Post(sql.FieldIn(FieldContent, vs...))
 }
 
-// CommentLTE applies the LTE predicate on the "comment" field.
-func CommentLTE(v string) predicate.Post {
-	return predicate.Post(sql.FieldLTE(FieldComment, v))
+// ContentNotIn applies the NotIn predicate on the "content" field.
+func ContentNotIn(vs ...string) predicate.Post {
+	return predicate.Post(sql.FieldNotIn(FieldContent, vs...))
 }
 
-// CommentContains applies the Contains predicate on the "comment" field.
-func CommentContains(v string) predicate.Post {
-	return predicate.Post(sql.FieldContains(FieldComment, v))
+// ContentGT applies the GT predicate on the "content" field.
+func ContentGT(v string) predicate.Post {
+	return predicate.Post(sql.FieldGT(FieldContent, v))
 }
 
-// CommentHasPrefix applies the HasPrefix predicate on the "comment" field.
-func CommentHasPrefix(v string) predicate.Post {
-	return predicate.Post(sql.FieldHasPrefix(FieldComment, v))
+// ContentGTE applies the GTE predicate on the "content" field.
+func ContentGTE(v string) predicate.Post {
+	return predicate.Post(sql.FieldGTE(FieldContent, v))
 }
 
-// CommentHasSuffix applies the HasSuffix predicate on the "comment" field.
-func CommentHasSuffix(v string) predicate.Post {
-	return predicate.Post(sql.FieldHasSuffix(FieldComment, v))
+// ContentLT applies the LT predicate on the "content" field.
+func ContentLT(v string) predicate.Post {
+	return predicate.Post(sql.FieldLT(FieldContent, v))
 }
 
-// CommentEqualFold applies the EqualFold predicate on the "comment" field.
-func CommentEqualFold(v string) predicate.Post {
-	return predicate.Post(sql.FieldEqualFold(FieldComment, v))
+// ContentLTE applies the LTE predicate on the "content" field.
+func ContentLTE(v string) predicate.Post {
+	return predicate.Post(sql.FieldLTE(FieldContent, v))
 }
 
-// CommentContainsFold applies the ContainsFold predicate on the "comment" field.
-func CommentContainsFold(v string) predicate.Post {
-	return predicate.Post(sql.FieldContainsFold(FieldComment, v))
+// ContentContains applies the Contains predicate on the "content" field.
+func ContentContains(v string) predicate.Post {
+	return predicate.Post(sql.FieldContains(FieldContent, v))
+}
+
+// ContentHasPrefix applies the HasPrefix predicate on the "content" field.
+func ContentHasPrefix(v string) predicate.Post {
+	return predicate.Post(sql.FieldHasPrefix(FieldContent, v))
+}
+
+// ContentHasSuffix applies the HasSuffix predicate on the "content" field.
+func ContentHasSuffix(v string) predicate.Post {
+	return predicate.Post(sql.FieldHasSuffix(FieldContent, v))
+}
+
+// ContentEqualFold applies the EqualFold predicate on the "content" field.
+func ContentEqualFold(v string) predicate.Post {
+	return predicate.Post(sql.FieldEqualFold(FieldContent, v))
+}
+
+// ContentContainsFold applies the ContainsFold predicate on the "content" field.
+func ContentContainsFold(v string) predicate.Post {
+	return predicate.Post(sql.FieldContainsFold(FieldContent, v))
 }
 
 // LocationXEQ applies the EQ predicate on the "location_x" field.
@@ -390,7 +415,7 @@ func HasUser() predicate.Post {
 	return predicate.Post(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, UserTable, UserPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -436,7 +461,7 @@ func HasImages() predicate.Post {
 	return predicate.Post(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ImagesTable, ImagesColumn),
+			sqlgraph.Edge(sqlgraph.O2O, false, ImagesTable, ImagesColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

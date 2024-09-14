@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -28,6 +29,27 @@ func (piu *PostImageUpdate) Where(ps ...predicate.PostImage) *PostImageUpdate {
 	return piu
 }
 
+// SetPostID sets the "post_id" field.
+func (piu *PostImageUpdate) SetPostID(i int) *PostImageUpdate {
+	piu.mutation.ResetPostID()
+	piu.mutation.SetPostID(i)
+	return piu
+}
+
+// SetNillablePostID sets the "post_id" field if the given value is not nil.
+func (piu *PostImageUpdate) SetNillablePostID(i *int) *PostImageUpdate {
+	if i != nil {
+		piu.SetPostID(*i)
+	}
+	return piu
+}
+
+// AddPostID adds i to the "post_id" field.
+func (piu *PostImageUpdate) AddPostID(i int) *PostImageUpdate {
+	piu.mutation.AddPostID(i)
+	return piu
+}
+
 // SetImageURL sets the "image_url" field.
 func (piu *PostImageUpdate) SetImageURL(s string) *PostImageUpdate {
 	piu.mutation.SetImageURL(s)
@@ -38,6 +60,20 @@ func (piu *PostImageUpdate) SetImageURL(s string) *PostImageUpdate {
 func (piu *PostImageUpdate) SetNillableImageURL(s *string) *PostImageUpdate {
 	if s != nil {
 		piu.SetImageURL(*s)
+	}
+	return piu
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (piu *PostImageUpdate) SetCreatedAt(t time.Time) *PostImageUpdate {
+	piu.mutation.SetCreatedAt(t)
+	return piu
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (piu *PostImageUpdate) SetNillableCreatedAt(t *time.Time) *PostImageUpdate {
+	if t != nil {
+		piu.SetCreatedAt(*t)
 	}
 	return piu
 }
@@ -121,12 +157,21 @@ func (piu *PostImageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := piu.mutation.PostID(); ok {
+		_spec.SetField(postimage.FieldPostID, field.TypeInt, value)
+	}
+	if value, ok := piu.mutation.AddedPostID(); ok {
+		_spec.AddField(postimage.FieldPostID, field.TypeInt, value)
+	}
 	if value, ok := piu.mutation.ImageURL(); ok {
 		_spec.SetField(postimage.FieldImageURL, field.TypeString, value)
 	}
+	if value, ok := piu.mutation.CreatedAt(); ok {
+		_spec.SetField(postimage.FieldCreatedAt, field.TypeTime, value)
+	}
 	if piu.mutation.PostCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2O,
 			Inverse: true,
 			Table:   postimage.PostTable,
 			Columns: []string{postimage.PostColumn},
@@ -139,7 +184,7 @@ func (piu *PostImageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := piu.mutation.PostIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2O,
 			Inverse: true,
 			Table:   postimage.PostTable,
 			Columns: []string{postimage.PostColumn},
@@ -173,6 +218,27 @@ type PostImageUpdateOne struct {
 	mutation *PostImageMutation
 }
 
+// SetPostID sets the "post_id" field.
+func (piuo *PostImageUpdateOne) SetPostID(i int) *PostImageUpdateOne {
+	piuo.mutation.ResetPostID()
+	piuo.mutation.SetPostID(i)
+	return piuo
+}
+
+// SetNillablePostID sets the "post_id" field if the given value is not nil.
+func (piuo *PostImageUpdateOne) SetNillablePostID(i *int) *PostImageUpdateOne {
+	if i != nil {
+		piuo.SetPostID(*i)
+	}
+	return piuo
+}
+
+// AddPostID adds i to the "post_id" field.
+func (piuo *PostImageUpdateOne) AddPostID(i int) *PostImageUpdateOne {
+	piuo.mutation.AddPostID(i)
+	return piuo
+}
+
 // SetImageURL sets the "image_url" field.
 func (piuo *PostImageUpdateOne) SetImageURL(s string) *PostImageUpdateOne {
 	piuo.mutation.SetImageURL(s)
@@ -183,6 +249,20 @@ func (piuo *PostImageUpdateOne) SetImageURL(s string) *PostImageUpdateOne {
 func (piuo *PostImageUpdateOne) SetNillableImageURL(s *string) *PostImageUpdateOne {
 	if s != nil {
 		piuo.SetImageURL(*s)
+	}
+	return piuo
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (piuo *PostImageUpdateOne) SetCreatedAt(t time.Time) *PostImageUpdateOne {
+	piuo.mutation.SetCreatedAt(t)
+	return piuo
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (piuo *PostImageUpdateOne) SetNillableCreatedAt(t *time.Time) *PostImageUpdateOne {
+	if t != nil {
+		piuo.SetCreatedAt(*t)
 	}
 	return piuo
 }
@@ -296,12 +376,21 @@ func (piuo *PostImageUpdateOne) sqlSave(ctx context.Context) (_node *PostImage, 
 			}
 		}
 	}
+	if value, ok := piuo.mutation.PostID(); ok {
+		_spec.SetField(postimage.FieldPostID, field.TypeInt, value)
+	}
+	if value, ok := piuo.mutation.AddedPostID(); ok {
+		_spec.AddField(postimage.FieldPostID, field.TypeInt, value)
+	}
 	if value, ok := piuo.mutation.ImageURL(); ok {
 		_spec.SetField(postimage.FieldImageURL, field.TypeString, value)
 	}
+	if value, ok := piuo.mutation.CreatedAt(); ok {
+		_spec.SetField(postimage.FieldCreatedAt, field.TypeTime, value)
+	}
 	if piuo.mutation.PostCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2O,
 			Inverse: true,
 			Table:   postimage.PostTable,
 			Columns: []string{postimage.PostColumn},
@@ -314,7 +403,7 @@ func (piuo *PostImageUpdateOne) sqlSave(ctx context.Context) (_node *PostImage, 
 	}
 	if nodes := piuo.mutation.PostIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2O,
 			Inverse: true,
 			Table:   postimage.PostTable,
 			Columns: []string{postimage.PostColumn},

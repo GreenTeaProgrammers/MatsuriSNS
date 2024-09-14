@@ -3,6 +3,8 @@
 package postimage
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 )
@@ -12,8 +14,12 @@ const (
 	Label = "post_image"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldPostID holds the string denoting the post_id field in the database.
+	FieldPostID = "post_id"
 	// FieldImageURL holds the string denoting the image_url field in the database.
 	FieldImageURL = "image_url"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
 	// EdgePost holds the string denoting the post edge name in mutations.
 	EdgePost = "post"
 	// Table holds the table name of the postimage in the database.
@@ -30,7 +36,9 @@ const (
 // Columns holds all SQL columns for postimage fields.
 var Columns = []string{
 	FieldID,
+	FieldPostID,
 	FieldImageURL,
+	FieldCreatedAt,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "post_images"
@@ -57,6 +65,8 @@ func ValidColumn(column string) bool {
 var (
 	// ImageURLValidator is a validator for the "image_url" field. It is called by the builders before save.
 	ImageURLValidator func(string) error
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
 )
 
 // OrderOption defines the ordering options for the PostImage queries.
@@ -67,9 +77,19 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
+// ByPostID orders the results by the post_id field.
+func ByPostID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPostID, opts...).ToFunc()
+}
+
 // ByImageURL orders the results by the image_url field.
 func ByImageURL(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldImageURL, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
 }
 
 // ByPostField orders the results by post field.
@@ -82,6 +102,6 @@ func newPostStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PostInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, PostTable, PostColumn),
+		sqlgraph.Edge(sqlgraph.O2O, true, PostTable, PostColumn),
 	)
 }

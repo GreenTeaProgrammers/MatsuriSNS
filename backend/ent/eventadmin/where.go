@@ -55,9 +55,99 @@ func IDLTE(id int) predicate.EventAdmin {
 	return predicate.EventAdmin(sql.FieldLTE(FieldID, id))
 }
 
+// EventID applies equality check predicate on the "event_id" field. It's identical to EventIDEQ.
+func EventID(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldEQ(FieldEventID, v))
+}
+
+// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
+func UserID(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldEQ(FieldUserID, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.EventAdmin {
 	return predicate.EventAdmin(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// EventIDEQ applies the EQ predicate on the "event_id" field.
+func EventIDEQ(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldEQ(FieldEventID, v))
+}
+
+// EventIDNEQ applies the NEQ predicate on the "event_id" field.
+func EventIDNEQ(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldNEQ(FieldEventID, v))
+}
+
+// EventIDIn applies the In predicate on the "event_id" field.
+func EventIDIn(vs ...int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldIn(FieldEventID, vs...))
+}
+
+// EventIDNotIn applies the NotIn predicate on the "event_id" field.
+func EventIDNotIn(vs ...int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldNotIn(FieldEventID, vs...))
+}
+
+// EventIDGT applies the GT predicate on the "event_id" field.
+func EventIDGT(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldGT(FieldEventID, v))
+}
+
+// EventIDGTE applies the GTE predicate on the "event_id" field.
+func EventIDGTE(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldGTE(FieldEventID, v))
+}
+
+// EventIDLT applies the LT predicate on the "event_id" field.
+func EventIDLT(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldLT(FieldEventID, v))
+}
+
+// EventIDLTE applies the LTE predicate on the "event_id" field.
+func EventIDLTE(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldLTE(FieldEventID, v))
+}
+
+// UserIDEQ applies the EQ predicate on the "user_id" field.
+func UserIDEQ(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldEQ(FieldUserID, v))
+}
+
+// UserIDNEQ applies the NEQ predicate on the "user_id" field.
+func UserIDNEQ(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldNEQ(FieldUserID, v))
+}
+
+// UserIDIn applies the In predicate on the "user_id" field.
+func UserIDIn(vs ...int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldIn(FieldUserID, vs...))
+}
+
+// UserIDNotIn applies the NotIn predicate on the "user_id" field.
+func UserIDNotIn(vs ...int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldNotIn(FieldUserID, vs...))
+}
+
+// UserIDGT applies the GT predicate on the "user_id" field.
+func UserIDGT(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldGT(FieldUserID, v))
+}
+
+// UserIDGTE applies the GTE predicate on the "user_id" field.
+func UserIDGTE(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldGTE(FieldUserID, v))
+}
+
+// UserIDLT applies the LT predicate on the "user_id" field.
+func UserIDLT(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldLT(FieldUserID, v))
+}
+
+// UserIDLTE applies the LTE predicate on the "user_id" field.
+func UserIDLTE(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldLTE(FieldUserID, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

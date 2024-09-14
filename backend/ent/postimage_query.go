@@ -75,7 +75,7 @@ func (piq *PostImageQuery) QueryPost() *PostQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(postimage.Table, postimage.FieldID, selector),
 			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, postimage.PostTable, postimage.PostColumn),
+			sqlgraph.Edge(sqlgraph.O2O, true, postimage.PostTable, postimage.PostColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(piq.driver.Dialect(), step)
 		return fromU, nil
@@ -299,12 +299,12 @@ func (piq *PostImageQuery) WithPost(opts ...func(*PostQuery)) *PostImageQuery {
 // Example:
 //
 //	var v []struct {
-//		ImageURL string `json:"image_url,omitempty"`
+//		PostID int `json:"post_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.PostImage.Query().
-//		GroupBy(postimage.FieldImageURL).
+//		GroupBy(postimage.FieldPostID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (piq *PostImageQuery) GroupBy(field string, fields ...string) *PostImageGroupBy {
@@ -322,11 +322,11 @@ func (piq *PostImageQuery) GroupBy(field string, fields ...string) *PostImageGro
 // Example:
 //
 //	var v []struct {
-//		ImageURL string `json:"image_url,omitempty"`
+//		PostID int `json:"post_id,omitempty"`
 //	}
 //
 //	client.PostImage.Query().
-//		Select(postimage.FieldImageURL).
+//		Select(postimage.FieldPostID).
 //		Scan(ctx, &v)
 func (piq *PostImageQuery) Select(fields ...string) *PostImageSelect {
 	piq.ctx.Fields = append(piq.ctx.Fields, fields...)

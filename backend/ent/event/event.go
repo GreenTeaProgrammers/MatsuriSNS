@@ -20,6 +20,14 @@ const (
 	FieldMapURL = "map_url"
 	// FieldQrCodeURL holds the string denoting the qr_code_url field in the database.
 	FieldQrCodeURL = "qr_code_url"
+	// FieldStartTime holds the string denoting the start_time field in the database.
+	FieldStartTime = "start_time"
+	// FieldEndTime holds the string denoting the end_time field in the database.
+	FieldEndTime = "end_time"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
 	// EdgeCreatedBy holds the string denoting the created_by edge name in mutations.
 	EdgeCreatedBy = "created_by"
 	// EdgePosts holds the string denoting the posts edge name in mutations.
@@ -56,6 +64,10 @@ var Columns = []string{
 	FieldDescription,
 	FieldMapURL,
 	FieldQrCodeURL,
+	FieldStartTime,
+	FieldEndTime,
+	FieldCreatedAt,
+	FieldUpdatedAt,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "events"
@@ -118,6 +130,26 @@ func ByMapURL(opts ...sql.OrderTermOption) OrderOption {
 // ByQrCodeURL orders the results by the qr_code_url field.
 func ByQrCodeURL(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldQrCodeURL, opts...).ToFunc()
+}
+
+// ByStartTime orders the results by the start_time field.
+func ByStartTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStartTime, opts...).ToFunc()
+}
+
+// ByEndTime orders the results by the end_time field.
+func ByEndTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEndTime, opts...).ToFunc()
+}
+
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByUpdatedAt orders the results by the updated_at field.
+func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
 // ByCreatedByField orders the results by created_by field.

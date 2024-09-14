@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -20,9 +21,29 @@ type PostImageCreate struct {
 	hooks    []Hook
 }
 
+// SetPostID sets the "post_id" field.
+func (pic *PostImageCreate) SetPostID(i int) *PostImageCreate {
+	pic.mutation.SetPostID(i)
+	return pic
+}
+
 // SetImageURL sets the "image_url" field.
 func (pic *PostImageCreate) SetImageURL(s string) *PostImageCreate {
 	pic.mutation.SetImageURL(s)
+	return pic
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (pic *PostImageCreate) SetCreatedAt(t time.Time) *PostImageCreate {
+	pic.mutation.SetCreatedAt(t)
+	return pic
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (pic *PostImageCreate) SetNillableCreatedAt(t *time.Time) *PostImageCreate {
+	if t != nil {
+		pic.SetCreatedAt(*t)
+	}
 	return pic
 }
 
@@ -52,6 +73,7 @@ func (pic *PostImageCreate) Mutation() *PostImageMutation {
 
 // Save creates the PostImage in the database.
 func (pic *PostImageCreate) Save(ctx context.Context) (*PostImage, error) {
+	pic.defaults()
 	return withHooks(ctx, pic.sqlSave, pic.mutation, pic.hooks)
 }
 
@@ -77,8 +99,19 @@ func (pic *PostImageCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (pic *PostImageCreate) defaults() {
+	if _, ok := pic.mutation.CreatedAt(); !ok {
+		v := postimage.DefaultCreatedAt()
+		pic.mutation.SetCreatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (pic *PostImageCreate) check() error {
+	if _, ok := pic.mutation.PostID(); !ok {
+		return &ValidationError{Name: "post_id", err: errors.New(`ent: missing required field "PostImage.post_id"`)}
+	}
 	if _, ok := pic.mutation.ImageURL(); !ok {
 		return &ValidationError{Name: "image_url", err: errors.New(`ent: missing required field "PostImage.image_url"`)}
 	}
@@ -86,6 +119,9 @@ func (pic *PostImageCreate) check() error {
 		if err := postimage.ImageURLValidator(v); err != nil {
 			return &ValidationError{Name: "image_url", err: fmt.Errorf(`ent: validator failed for field "PostImage.image_url": %w`, err)}
 		}
+	}
+	if _, ok := pic.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "PostImage.created_at"`)}
 	}
 	return nil
 }
@@ -113,13 +149,21 @@ func (pic *PostImageCreate) createSpec() (*PostImage, *sqlgraph.CreateSpec) {
 		_node = &PostImage{config: pic.config}
 		_spec = sqlgraph.NewCreateSpec(postimage.Table, sqlgraph.NewFieldSpec(postimage.FieldID, field.TypeInt))
 	)
+	if value, ok := pic.mutation.PostID(); ok {
+		_spec.SetField(postimage.FieldPostID, field.TypeInt, value)
+		_node.PostID = value
+	}
 	if value, ok := pic.mutation.ImageURL(); ok {
 		_spec.SetField(postimage.FieldImageURL, field.TypeString, value)
 		_node.ImageURL = value
 	}
+	if value, ok := pic.mutation.CreatedAt(); ok {
+		_spec.SetField(postimage.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
+	}
 	if nodes := pic.mutation.PostIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2O,
 			Inverse: true,
 			Table:   postimage.PostTable,
 			Columns: []string{postimage.PostColumn},
@@ -155,6 +199,7 @@ func (picb *PostImageCreateBulk) Save(ctx context.Context) ([]*PostImage, error)
 	for i := range picb.builders {
 		func(i int, root context.Context) {
 			builder := picb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*PostImageMutation)
 				if !ok {

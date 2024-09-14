@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -95,6 +96,54 @@ func (eu *EventUpdate) SetNillableQrCodeURL(s *string) *EventUpdate {
 // ClearQrCodeURL clears the value of the "qr_code_url" field.
 func (eu *EventUpdate) ClearQrCodeURL() *EventUpdate {
 	eu.mutation.ClearQrCodeURL()
+	return eu
+}
+
+// SetStartTime sets the "start_time" field.
+func (eu *EventUpdate) SetStartTime(t time.Time) *EventUpdate {
+	eu.mutation.SetStartTime(t)
+	return eu
+}
+
+// SetNillableStartTime sets the "start_time" field if the given value is not nil.
+func (eu *EventUpdate) SetNillableStartTime(t *time.Time) *EventUpdate {
+	if t != nil {
+		eu.SetStartTime(*t)
+	}
+	return eu
+}
+
+// SetEndTime sets the "end_time" field.
+func (eu *EventUpdate) SetEndTime(t time.Time) *EventUpdate {
+	eu.mutation.SetEndTime(t)
+	return eu
+}
+
+// SetNillableEndTime sets the "end_time" field if the given value is not nil.
+func (eu *EventUpdate) SetNillableEndTime(t *time.Time) *EventUpdate {
+	if t != nil {
+		eu.SetEndTime(*t)
+	}
+	return eu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (eu *EventUpdate) SetUpdatedAt(t time.Time) *EventUpdate {
+	eu.mutation.SetUpdatedAt(t)
+	return eu
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (eu *EventUpdate) SetNillableUpdatedAt(t *time.Time) *EventUpdate {
+	if t != nil {
+		eu.SetUpdatedAt(*t)
+	}
+	return eu
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (eu *EventUpdate) ClearUpdatedAt() *EventUpdate {
+	eu.mutation.ClearUpdatedAt()
 	return eu
 }
 
@@ -271,6 +320,18 @@ func (eu *EventUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if eu.mutation.QrCodeURLCleared() {
 		_spec.ClearField(event.FieldQrCodeURL, field.TypeString)
+	}
+	if value, ok := eu.mutation.StartTime(); ok {
+		_spec.SetField(event.FieldStartTime, field.TypeTime, value)
+	}
+	if value, ok := eu.mutation.EndTime(); ok {
+		_spec.SetField(event.FieldEndTime, field.TypeTime, value)
+	}
+	if value, ok := eu.mutation.UpdatedAt(); ok {
+		_spec.SetField(event.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if eu.mutation.UpdatedAtCleared() {
+		_spec.ClearField(event.FieldUpdatedAt, field.TypeTime)
 	}
 	if eu.mutation.CreatedByCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -479,6 +540,54 @@ func (euo *EventUpdateOne) ClearQrCodeURL() *EventUpdateOne {
 	return euo
 }
 
+// SetStartTime sets the "start_time" field.
+func (euo *EventUpdateOne) SetStartTime(t time.Time) *EventUpdateOne {
+	euo.mutation.SetStartTime(t)
+	return euo
+}
+
+// SetNillableStartTime sets the "start_time" field if the given value is not nil.
+func (euo *EventUpdateOne) SetNillableStartTime(t *time.Time) *EventUpdateOne {
+	if t != nil {
+		euo.SetStartTime(*t)
+	}
+	return euo
+}
+
+// SetEndTime sets the "end_time" field.
+func (euo *EventUpdateOne) SetEndTime(t time.Time) *EventUpdateOne {
+	euo.mutation.SetEndTime(t)
+	return euo
+}
+
+// SetNillableEndTime sets the "end_time" field if the given value is not nil.
+func (euo *EventUpdateOne) SetNillableEndTime(t *time.Time) *EventUpdateOne {
+	if t != nil {
+		euo.SetEndTime(*t)
+	}
+	return euo
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (euo *EventUpdateOne) SetUpdatedAt(t time.Time) *EventUpdateOne {
+	euo.mutation.SetUpdatedAt(t)
+	return euo
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (euo *EventUpdateOne) SetNillableUpdatedAt(t *time.Time) *EventUpdateOne {
+	if t != nil {
+		euo.SetUpdatedAt(*t)
+	}
+	return euo
+}
+
+// ClearUpdatedAt clears the value of the "updated_at" field.
+func (euo *EventUpdateOne) ClearUpdatedAt() *EventUpdateOne {
+	euo.mutation.ClearUpdatedAt()
+	return euo
+}
+
 // SetCreatedByID sets the "created_by" edge to the User entity by ID.
 func (euo *EventUpdateOne) SetCreatedByID(id int) *EventUpdateOne {
 	euo.mutation.SetCreatedByID(id)
@@ -682,6 +791,18 @@ func (euo *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error
 	}
 	if euo.mutation.QrCodeURLCleared() {
 		_spec.ClearField(event.FieldQrCodeURL, field.TypeString)
+	}
+	if value, ok := euo.mutation.StartTime(); ok {
+		_spec.SetField(event.FieldStartTime, field.TypeTime, value)
+	}
+	if value, ok := euo.mutation.EndTime(); ok {
+		_spec.SetField(event.FieldEndTime, field.TypeTime, value)
+	}
+	if value, ok := euo.mutation.UpdatedAt(); ok {
+		_spec.SetField(event.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if euo.mutation.UpdatedAtCleared() {
+		_spec.ClearField(event.FieldUpdatedAt, field.TypeTime)
 	}
 	if euo.mutation.CreatedByCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -335,12 +335,12 @@ func (eaq *EventAdminQuery) WithUser(opts ...func(*UserQuery)) *EventAdminQuery 
 // Example:
 //
 //	var v []struct {
-//		CreatedAt time.Time `json:"created_at,omitempty"`
+//		EventID int `json:"event_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.EventAdmin.Query().
-//		GroupBy(eventadmin.FieldCreatedAt).
+//		GroupBy(eventadmin.FieldEventID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (eaq *EventAdminQuery) GroupBy(field string, fields ...string) *EventAdminGroupBy {
@@ -358,11 +358,11 @@ func (eaq *EventAdminQuery) GroupBy(field string, fields ...string) *EventAdminG
 // Example:
 //
 //	var v []struct {
-//		CreatedAt time.Time `json:"created_at,omitempty"`
+//		EventID int `json:"event_id,omitempty"`
 //	}
 //
 //	client.EventAdmin.Query().
-//		Select(eventadmin.FieldCreatedAt).
+//		Select(eventadmin.FieldEventID).
 //		Scan(ctx, &v)
 func (eaq *EventAdminQuery) Select(fields ...string) *EventAdminSelect {
 	eaq.ctx.Fields = append(eaq.ctx.Fields, fields...)

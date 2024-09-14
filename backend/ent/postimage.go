@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -17,8 +18,12 @@ type PostImage struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// PostID holds the value of the "post_id" field.
+	PostID int `json:"post_id,omitempty"`
 	// ImageURL holds the value of the "image_url" field.
 	ImageURL string `json:"image_url,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PostImageQuery when eager-loading is set.
 	Edges        PostImageEdges `json:"edges"`
@@ -51,10 +56,12 @@ func (*PostImage) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case postimage.FieldID:
+		case postimage.FieldID, postimage.FieldPostID:
 			values[i] = new(sql.NullInt64)
 		case postimage.FieldImageURL:
 			values[i] = new(sql.NullString)
+		case postimage.FieldCreatedAt:
+			values[i] = new(sql.NullTime)
 		case postimage.ForeignKeys[0]: // post_images
 			values[i] = new(sql.NullInt64)
 		default:
@@ -78,11 +85,23 @@ func (pi *PostImage) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			pi.ID = int(value.Int64)
+		case postimage.FieldPostID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field post_id", values[i])
+			} else if value.Valid {
+				pi.PostID = int(value.Int64)
+			}
 		case postimage.FieldImageURL:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field image_url", values[i])
 			} else if value.Valid {
 				pi.ImageURL = value.String
+			}
+		case postimage.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				pi.CreatedAt = value.Time
 			}
 		case postimage.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -132,8 +151,14 @@ func (pi *PostImage) String() string {
 	var builder strings.Builder
 	builder.WriteString("PostImage(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", pi.ID))
+	builder.WriteString("post_id=")
+	builder.WriteString(fmt.Sprintf("%v", pi.PostID))
+	builder.WriteString(", ")
 	builder.WriteString("image_url=")
 	builder.WriteString(pi.ImageURL)
+	builder.WriteString(", ")
+	builder.WriteString("created_at=")
+	builder.WriteString(pi.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

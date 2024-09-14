@@ -14,8 +14,10 @@ const (
 	Label = "post"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldComment holds the string denoting the comment field in the database.
-	FieldComment = "comment"
+	// FieldUserID holds the string denoting the user_id field in the database.
+	FieldUserID = "user_id"
+	// FieldContent holds the string denoting the content field in the database.
+	FieldContent = "content"
 	// FieldLocationX holds the string denoting the location_x field in the database.
 	FieldLocationX = "location_x"
 	// FieldLocationY holds the string denoting the location_y field in the database.
@@ -34,11 +36,13 @@ const (
 	EdgeImages = "images"
 	// Table holds the table name of the post in the database.
 	Table = "posts"
-	// UserTable is the table that holds the user relation/edge. The primary key declared below.
-	UserTable = "user_posts"
+	// UserTable is the table that holds the user relation/edge.
+	UserTable = "posts"
 	// UserInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "users"
+	// UserColumn is the table column denoting the user relation/edge.
+	UserColumn = "user_id"
 	// EventTable is the table that holds the event relation/edge. The primary key declared below.
 	EventTable = "event_posts"
 	// EventInverseTable is the table name for the Event entity.
@@ -56,7 +60,8 @@ const (
 // Columns holds all SQL columns for post fields.
 var Columns = []string{
 	FieldID,
-	FieldComment,
+	FieldUserID,
+	FieldContent,
 	FieldLocationX,
 	FieldLocationY,
 	FieldVideoURL,
@@ -65,9 +70,6 @@ var Columns = []string{
 }
 
 var (
-	// UserPrimaryKey and UserColumn2 are the table columns denoting the
-	// primary key for the user relation (M2M).
-	UserPrimaryKey = []string{"user_id", "post_id"}
 	// EventPrimaryKey and EventColumn2 are the table columns denoting the
 	// primary key for the event relation (M2M).
 	EventPrimaryKey = []string{"event_id", "post_id"}
@@ -84,8 +86,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
-	// CommentValidator is a validator for the "comment" field. It is called by the builders before save.
-	CommentValidator func(string) error
+	// ContentValidator is a validator for the "content" field. It is called by the builders before save.
+	ContentValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -102,9 +104,14 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
 }
 
-// ByComment orders the results by the comment field.
-func ByComment(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldComment, opts...).ToFunc()
+// ByUserID orders the results by the user_id field.
+func ByUserID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUserID, opts...).ToFunc()
+}
+
+// ByContent orders the results by the content field.
+func ByContent(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldContent, opts...).ToFunc()
 }
 
 // ByLocationX orders the results by the location_x field.
@@ -132,17 +139,10 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
-// ByUserCount orders the results by user count.
-func ByUserCount(opts ...sql.OrderTermOption) OrderOption {
+// ByUserField orders the results by user field.
+func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newUserStep(), opts...)
-	}
-}
-
-// ByUser orders the results by user terms.
-func ByUser(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newUserStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -160,24 +160,17 @@ func ByEvent(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByImagesCount orders the results by images count.
-func ByImagesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByImagesField orders the results by images field.
+func ByImagesField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newImagesStep(), opts...)
-	}
-}
-
-// ByImages orders the results by images terms.
-func ByImages(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newImagesStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newImagesStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, UserTable, UserPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 	)
 }
 func newEventStep() *sqlgraph.Step {
@@ -191,6 +184,6 @@ func newImagesStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ImagesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ImagesTable, ImagesColumn),
+		sqlgraph.Edge(sqlgraph.O2O, false, ImagesTable, ImagesColumn),
 	)
 }

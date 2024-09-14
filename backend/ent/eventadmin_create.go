@@ -22,6 +22,18 @@ type EventAdminCreate struct {
 	hooks    []Hook
 }
 
+// SetEventID sets the "event_id" field.
+func (eac *EventAdminCreate) SetEventID(i int) *EventAdminCreate {
+	eac.mutation.SetEventID(i)
+	return eac
+}
+
+// SetUserID sets the "user_id" field.
+func (eac *EventAdminCreate) SetUserID(i int) *EventAdminCreate {
+	eac.mutation.SetUserID(i)
+	return eac
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (eac *EventAdminCreate) SetCreatedAt(t time.Time) *EventAdminCreate {
 	eac.mutation.SetCreatedAt(t)
@@ -117,6 +129,12 @@ func (eac *EventAdminCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (eac *EventAdminCreate) check() error {
+	if _, ok := eac.mutation.EventID(); !ok {
+		return &ValidationError{Name: "event_id", err: errors.New(`ent: missing required field "EventAdmin.event_id"`)}
+	}
+	if _, ok := eac.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "EventAdmin.user_id"`)}
+	}
 	if _, ok := eac.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "EventAdmin.created_at"`)}
 	}
@@ -146,6 +164,14 @@ func (eac *EventAdminCreate) createSpec() (*EventAdmin, *sqlgraph.CreateSpec) {
 		_node = &EventAdmin{config: eac.config}
 		_spec = sqlgraph.NewCreateSpec(eventadmin.Table, sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt))
 	)
+	if value, ok := eac.mutation.EventID(); ok {
+		_spec.SetField(eventadmin.FieldEventID, field.TypeInt, value)
+		_node.EventID = value
+	}
+	if value, ok := eac.mutation.UserID(); ok {
+		_spec.SetField(eventadmin.FieldUserID, field.TypeInt, value)
+		_node.UserID = value
+	}
 	if value, ok := eac.mutation.CreatedAt(); ok {
 		_spec.SetField(eventadmin.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value

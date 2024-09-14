@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -25,6 +26,14 @@ type Event struct {
 	MapURL string `json:"map_url,omitempty"`
 	// QrCodeURL holds the value of the "qr_code_url" field.
 	QrCodeURL string `json:"qr_code_url,omitempty"`
+	// StartTime holds the value of the "start_time" field.
+	StartTime time.Time `json:"start_time,omitempty"`
+	// EndTime holds the value of the "end_time" field.
+	EndTime time.Time `json:"end_time,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EventQuery when eager-loading is set.
 	Edges        EventEdges `json:"edges"`
@@ -83,6 +92,8 @@ func (*Event) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case event.FieldTitle, event.FieldDescription, event.FieldMapURL, event.FieldQrCodeURL:
 			values[i] = new(sql.NullString)
+		case event.FieldStartTime, event.FieldEndTime, event.FieldCreatedAt, event.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
 		case event.ForeignKeys[0]: // user_events
 			values[i] = new(sql.NullInt64)
 		default:
@@ -129,6 +140,30 @@ func (e *Event) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field qr_code_url", values[i])
 			} else if value.Valid {
 				e.QrCodeURL = value.String
+			}
+		case event.FieldStartTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field start_time", values[i])
+			} else if value.Valid {
+				e.StartTime = value.Time
+			}
+		case event.FieldEndTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field end_time", values[i])
+			} else if value.Valid {
+				e.EndTime = value.Time
+			}
+		case event.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				e.CreatedAt = value.Time
+			}
+		case event.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				e.UpdatedAt = value.Time
 			}
 		case event.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -199,6 +234,18 @@ func (e *Event) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("qr_code_url=")
 	builder.WriteString(e.QrCodeURL)
+	builder.WriteString(", ")
+	builder.WriteString("start_time=")
+	builder.WriteString(e.StartTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("end_time=")
+	builder.WriteString(e.EndTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("created_at=")
+	builder.WriteString(e.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("updated_at=")
+	builder.WriteString(e.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

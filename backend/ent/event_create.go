@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -58,6 +59,38 @@ func (ec *EventCreate) SetQrCodeURL(s string) *EventCreate {
 func (ec *EventCreate) SetNillableQrCodeURL(s *string) *EventCreate {
 	if s != nil {
 		ec.SetQrCodeURL(*s)
+	}
+	return ec
+}
+
+// SetStartTime sets the "start_time" field.
+func (ec *EventCreate) SetStartTime(t time.Time) *EventCreate {
+	ec.mutation.SetStartTime(t)
+	return ec
+}
+
+// SetEndTime sets the "end_time" field.
+func (ec *EventCreate) SetEndTime(t time.Time) *EventCreate {
+	ec.mutation.SetEndTime(t)
+	return ec
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (ec *EventCreate) SetCreatedAt(t time.Time) *EventCreate {
+	ec.mutation.SetCreatedAt(t)
+	return ec
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (ec *EventCreate) SetUpdatedAt(t time.Time) *EventCreate {
+	ec.mutation.SetUpdatedAt(t)
+	return ec
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (ec *EventCreate) SetNillableUpdatedAt(t *time.Time) *EventCreate {
+	if t != nil {
+		ec.SetUpdatedAt(*t)
 	}
 	return ec
 }
@@ -161,6 +194,15 @@ func (ec *EventCreate) check() error {
 			return &ValidationError{Name: "map_url", err: fmt.Errorf(`ent: validator failed for field "Event.map_url": %w`, err)}
 		}
 	}
+	if _, ok := ec.mutation.StartTime(); !ok {
+		return &ValidationError{Name: "start_time", err: errors.New(`ent: missing required field "Event.start_time"`)}
+	}
+	if _, ok := ec.mutation.EndTime(); !ok {
+		return &ValidationError{Name: "end_time", err: errors.New(`ent: missing required field "Event.end_time"`)}
+	}
+	if _, ok := ec.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Event.created_at"`)}
+	}
 	return nil
 }
 
@@ -202,6 +244,22 @@ func (ec *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 	if value, ok := ec.mutation.QrCodeURL(); ok {
 		_spec.SetField(event.FieldQrCodeURL, field.TypeString, value)
 		_node.QrCodeURL = value
+	}
+	if value, ok := ec.mutation.StartTime(); ok {
+		_spec.SetField(event.FieldStartTime, field.TypeTime, value)
+		_node.StartTime = value
+	}
+	if value, ok := ec.mutation.EndTime(); ok {
+		_spec.SetField(event.FieldEndTime, field.TypeTime, value)
+		_node.EndTime = value
+	}
+	if value, ok := ec.mutation.CreatedAt(); ok {
+		_spec.SetField(event.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
+	}
+	if value, ok := ec.mutation.UpdatedAt(); ok {
+		_spec.SetField(event.FieldUpdatedAt, field.TypeTime, value)
+		_node.UpdatedAt = value
 	}
 	if nodes := ec.mutation.CreatedByIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

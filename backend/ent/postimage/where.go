@@ -3,6 +3,8 @@
 package postimage
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/predicate"
@@ -53,9 +55,59 @@ func IDLTE(id int) predicate.PostImage {
 	return predicate.PostImage(sql.FieldLTE(FieldID, id))
 }
 
+// PostID applies equality check predicate on the "post_id" field. It's identical to PostIDEQ.
+func PostID(v int) predicate.PostImage {
+	return predicate.PostImage(sql.FieldEQ(FieldPostID, v))
+}
+
 // ImageURL applies equality check predicate on the "image_url" field. It's identical to ImageURLEQ.
 func ImageURL(v string) predicate.PostImage {
 	return predicate.PostImage(sql.FieldEQ(FieldImageURL, v))
+}
+
+// CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
+func CreatedAt(v time.Time) predicate.PostImage {
+	return predicate.PostImage(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// PostIDEQ applies the EQ predicate on the "post_id" field.
+func PostIDEQ(v int) predicate.PostImage {
+	return predicate.PostImage(sql.FieldEQ(FieldPostID, v))
+}
+
+// PostIDNEQ applies the NEQ predicate on the "post_id" field.
+func PostIDNEQ(v int) predicate.PostImage {
+	return predicate.PostImage(sql.FieldNEQ(FieldPostID, v))
+}
+
+// PostIDIn applies the In predicate on the "post_id" field.
+func PostIDIn(vs ...int) predicate.PostImage {
+	return predicate.PostImage(sql.FieldIn(FieldPostID, vs...))
+}
+
+// PostIDNotIn applies the NotIn predicate on the "post_id" field.
+func PostIDNotIn(vs ...int) predicate.PostImage {
+	return predicate.PostImage(sql.FieldNotIn(FieldPostID, vs...))
+}
+
+// PostIDGT applies the GT predicate on the "post_id" field.
+func PostIDGT(v int) predicate.PostImage {
+	return predicate.PostImage(sql.FieldGT(FieldPostID, v))
+}
+
+// PostIDGTE applies the GTE predicate on the "post_id" field.
+func PostIDGTE(v int) predicate.PostImage {
+	return predicate.PostImage(sql.FieldGTE(FieldPostID, v))
+}
+
+// PostIDLT applies the LT predicate on the "post_id" field.
+func PostIDLT(v int) predicate.PostImage {
+	return predicate.PostImage(sql.FieldLT(FieldPostID, v))
+}
+
+// PostIDLTE applies the LTE predicate on the "post_id" field.
+func PostIDLTE(v int) predicate.PostImage {
+	return predicate.PostImage(sql.FieldLTE(FieldPostID, v))
 }
 
 // ImageURLEQ applies the EQ predicate on the "image_url" field.
@@ -123,12 +175,52 @@ func ImageURLContainsFold(v string) predicate.PostImage {
 	return predicate.PostImage(sql.FieldContainsFold(FieldImageURL, v))
 }
 
+// CreatedAtEQ applies the EQ predicate on the "created_at" field.
+func CreatedAtEQ(v time.Time) predicate.PostImage {
+	return predicate.PostImage(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
+func CreatedAtNEQ(v time.Time) predicate.PostImage {
+	return predicate.PostImage(sql.FieldNEQ(FieldCreatedAt, v))
+}
+
+// CreatedAtIn applies the In predicate on the "created_at" field.
+func CreatedAtIn(vs ...time.Time) predicate.PostImage {
+	return predicate.PostImage(sql.FieldIn(FieldCreatedAt, vs...))
+}
+
+// CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
+func CreatedAtNotIn(vs ...time.Time) predicate.PostImage {
+	return predicate.PostImage(sql.FieldNotIn(FieldCreatedAt, vs...))
+}
+
+// CreatedAtGT applies the GT predicate on the "created_at" field.
+func CreatedAtGT(v time.Time) predicate.PostImage {
+	return predicate.PostImage(sql.FieldGT(FieldCreatedAt, v))
+}
+
+// CreatedAtGTE applies the GTE predicate on the "created_at" field.
+func CreatedAtGTE(v time.Time) predicate.PostImage {
+	return predicate.PostImage(sql.FieldGTE(FieldCreatedAt, v))
+}
+
+// CreatedAtLT applies the LT predicate on the "created_at" field.
+func CreatedAtLT(v time.Time) predicate.PostImage {
+	return predicate.PostImage(sql.FieldLT(FieldCreatedAt, v))
+}
+
+// CreatedAtLTE applies the LTE predicate on the "created_at" field.
+func CreatedAtLTE(v time.Time) predicate.PostImage {
+	return predicate.PostImage(sql.FieldLTE(FieldCreatedAt, v))
+}
+
 // HasPost applies the HasEdge predicate on the "post" edge.
 func HasPost() predicate.PostImage {
 	return predicate.PostImage(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, PostTable, PostColumn),
+			sqlgraph.Edge(sqlgraph.O2O, true, PostTable, PostColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
