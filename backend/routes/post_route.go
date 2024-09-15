@@ -7,7 +7,7 @@ import (
 )
 
 // PostRoutes defines the routes for post-related actions.
-func PostRoutes(router *gin.Engine, client *ent.Client) {
+func SetupPostRoutes(router *gin.Engine, client *ent.Client) {
 	postController := controllers.NewPostController(client)
 
 	// Create a new post
