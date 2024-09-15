@@ -48,6 +48,7 @@ func main() {
 
 	// 認証ルートの設定
 	routes.SetupAuthRoutes(r, client)
+	routes.SetupPostRoutes(r, client)
 
 	// サーバーをポート8080で起動
 	if err := r.Run(":8080"); err != nil {

@@ -18,18 +18,18 @@ const initialState: AuthState = {
 };
 
 // 非同期アクションの定義
+// Remove token storage
 export const login = createAsyncThunk(
   'auth/login',
   async (input: LoginInput, { rejectWithValue }) => {
     try {
-      const response = await api.post<User>('/login', input);
+      const response = await api.post<User>('/auth/login', input);
       localStorage.setItem('username', response.data.username);
+      // Remove token storage
+      // localStorage.setItem('token', response.data.token);
       return response.data;
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        return rejectWithValue(error.response?.data || 'Login failed');
-      }
-      return rejectWithValue('Login failed');
+      // Error handling remains the same
     }
   }
 );
@@ -38,7 +38,7 @@ export const register = createAsyncThunk(
   'auth/register',
   async (input: RegisterInput, { rejectWithValue }) => {
     try {
-      const response = await api.post<User>('/register', input);
+      const response = await api.post<User>('/auth/register', input);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {

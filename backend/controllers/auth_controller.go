@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent"
@@ -23,12 +24,13 @@ func NewAuthController(client *ent.Client) *AuthController {
 func (ac *AuthController) Register(c *gin.Context) {
 	type RegisterInput struct {
 		Username string `json:"username" binding:"required"`
-		Email    string `json:"email" binding:"required,email"`
 		Password string `json:"password" binding:"required,min=6"`
 	}
 
 	var input RegisterInput
 	if err := c.ShouldBindJSON(&input); err != nil {
+		// エラーメッセージをログに出力
+		log.Printf("Registration error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -44,7 +46,6 @@ func (ac *AuthController) Register(c *gin.Context) {
 	user, err := ac.client.User.
 		Create().
 		SetUsername(input.Username).
-		SetEmail(input.Email).
 		SetHashedPassword(hashedPassword). // Use SetHashedPassword instead of SetPassword
 		Save(context.Background())
 	if err != nil {
@@ -58,7 +59,7 @@ func (ac *AuthController) Register(c *gin.Context) {
 // Login handles user login
 func (ac *AuthController) Login(c *gin.Context) {
 	type LoginInput struct {
-		Email    string `json:"email" binding:"required,email"`
+		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
 
@@ -68,22 +69,22 @@ func (ac *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	// Find the user by email
+	// ユーザー名でユーザーを検索
 	user, err := ac.client.User.
 		Query().
-		Where(user.Email(input.Email)).
+		Where(user.UsernameEQ(input.Username)).
 		Only(context.Background())
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	// Check if the password matches
+	// パスワードの確認
 	if err := utils.CheckPassword(user.HashedPassword, input.Password); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	// Success
+	// ログイン成功
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "user": user})
 }
