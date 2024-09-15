@@ -8,6 +8,7 @@ import (
 	"github.com/GreenTeaProgrammers/MatsuriSNS/config"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/middlewares"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/routes"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -44,6 +45,9 @@ func main() {
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "Hello from MatsuriSNS"})
 	})
+
+	// 認証ルートの設定
+	routes.SetupAuthRoutes(r, client)
 
 	// サーバーをポート8080で起動
 	if err := r.Run(":8080"); err != nil {
