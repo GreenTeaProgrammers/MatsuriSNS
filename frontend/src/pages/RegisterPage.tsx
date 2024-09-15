@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { TextField, Button, Typography } from "@mui/material";
-import { RootState } from "../../store";
-import { login } from "../../store/authSlice";
+import { RootState } from "../store";
+import { login } from "../store/authSlice";
 
 const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });

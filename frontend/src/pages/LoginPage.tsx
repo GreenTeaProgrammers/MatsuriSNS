@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Button, Typography, Container, Avatar } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { login } from "../../store/authSlice"; // Reduxのloginアクションをインポート
+import { login } from "../store/authSlice"; // Reduxのloginアクションをインポート
 import { LoginInput } from "../../types/user";
 import {
   StyledTextField,
@@ -11,7 +11,7 @@ import {
   FormBox,
   SubmitButton,
 } from "./AuthStyles";
-import { RootState } from "../../store";
+import { RootState } from "../store";
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState<LoginInput>({
