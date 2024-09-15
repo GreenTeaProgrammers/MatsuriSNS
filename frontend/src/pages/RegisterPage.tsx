@@ -15,7 +15,6 @@ import {
 const RegisterPage: React.FC = () => {
   const [formData, setFormData] = useState({
     username: "",
-    email: "",
     password: "",
   });
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -32,9 +31,6 @@ const RegisterPage: React.FC = () => {
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!formData.email.endsWith("@shizuoka.ac.jp")) {
-      newErrors.email = "メールアドレスは@shizuoka.ac.jpで終わる必要があります。";
-    }
     if (formData.password.length < 6) {
       newErrors.password = "パスワードは6文字以上である必要があります。";
     }
@@ -93,19 +89,6 @@ const RegisterPage: React.FC = () => {
             autoFocus
             value={formData.username}
             onChange={handleChange}
-            variant="outlined"
-          />
-          <StyledTextField
-            required
-            fullWidth
-            id="email"
-            label="メールアドレス"
-            name="email"
-            autoComplete="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={!!errors.email}
-            helperText={errors.email}
             variant="outlined"
           />
           <StyledTextField
