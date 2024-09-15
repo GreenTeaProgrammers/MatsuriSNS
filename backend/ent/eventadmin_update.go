@@ -30,6 +30,34 @@ func (eau *EventAdminUpdate) Where(ps ...predicate.EventAdmin) *EventAdminUpdate
 	return eau
 }
 
+// SetEventID sets the "event_id" field.
+func (eau *EventAdminUpdate) SetEventID(i int) *EventAdminUpdate {
+	eau.mutation.SetEventID(i)
+	return eau
+}
+
+// SetNillableEventID sets the "event_id" field if the given value is not nil.
+func (eau *EventAdminUpdate) SetNillableEventID(i *int) *EventAdminUpdate {
+	if i != nil {
+		eau.SetEventID(*i)
+	}
+	return eau
+}
+
+// SetUserID sets the "user_id" field.
+func (eau *EventAdminUpdate) SetUserID(i int) *EventAdminUpdate {
+	eau.mutation.SetUserID(i)
+	return eau
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (eau *EventAdminUpdate) SetNillableUserID(i *int) *EventAdminUpdate {
+	if i != nil {
+		eau.SetUserID(*i)
+	}
+	return eau
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (eau *EventAdminUpdate) SetCreatedAt(t time.Time) *EventAdminUpdate {
 	eau.mutation.SetCreatedAt(t)
@@ -44,37 +72,9 @@ func (eau *EventAdminUpdate) SetNillableCreatedAt(t *time.Time) *EventAdminUpdat
 	return eau
 }
 
-// SetEventID sets the "event" edge to the Event entity by ID.
-func (eau *EventAdminUpdate) SetEventID(id int) *EventAdminUpdate {
-	eau.mutation.SetEventID(id)
-	return eau
-}
-
-// SetNillableEventID sets the "event" edge to the Event entity by ID if the given value is not nil.
-func (eau *EventAdminUpdate) SetNillableEventID(id *int) *EventAdminUpdate {
-	if id != nil {
-		eau = eau.SetEventID(*id)
-	}
-	return eau
-}
-
 // SetEvent sets the "event" edge to the Event entity.
 func (eau *EventAdminUpdate) SetEvent(e *Event) *EventAdminUpdate {
 	return eau.SetEventID(e.ID)
-}
-
-// SetUserID sets the "user" edge to the User entity by ID.
-func (eau *EventAdminUpdate) SetUserID(id int) *EventAdminUpdate {
-	eau.mutation.SetUserID(id)
-	return eau
-}
-
-// SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
-func (eau *EventAdminUpdate) SetNillableUserID(id *int) *EventAdminUpdate {
-	if id != nil {
-		eau = eau.SetUserID(*id)
-	}
-	return eau
 }
 
 // SetUser sets the "user" edge to the User entity.
@@ -126,7 +126,21 @@ func (eau *EventAdminUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (eau *EventAdminUpdate) check() error {
+	if eau.mutation.EventCleared() && len(eau.mutation.EventIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "EventAdmin.event"`)
+	}
+	if eau.mutation.UserCleared() && len(eau.mutation.UserIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "EventAdmin.user"`)
+	}
+	return nil
+}
+
 func (eau *EventAdminUpdate) sqlSave(ctx context.Context) (n int, err error) {
+	if err := eau.check(); err != nil {
+		return n, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(eventadmin.Table, eventadmin.Columns, sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt))
 	if ps := eau.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
@@ -141,7 +155,7 @@ func (eau *EventAdminUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if eau.mutation.EventCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   eventadmin.EventTable,
 			Columns: []string{eventadmin.EventColumn},
 			Bidi:    false,
@@ -154,7 +168,7 @@ func (eau *EventAdminUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := eau.mutation.EventIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   eventadmin.EventTable,
 			Columns: []string{eventadmin.EventColumn},
 			Bidi:    false,
@@ -170,7 +184,7 @@ func (eau *EventAdminUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if eau.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   eventadmin.UserTable,
 			Columns: []string{eventadmin.UserColumn},
 			Bidi:    false,
@@ -183,7 +197,7 @@ func (eau *EventAdminUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := eau.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   eventadmin.UserTable,
 			Columns: []string{eventadmin.UserColumn},
 			Bidi:    false,
@@ -216,6 +230,34 @@ type EventAdminUpdateOne struct {
 	mutation *EventAdminMutation
 }
 
+// SetEventID sets the "event_id" field.
+func (eauo *EventAdminUpdateOne) SetEventID(i int) *EventAdminUpdateOne {
+	eauo.mutation.SetEventID(i)
+	return eauo
+}
+
+// SetNillableEventID sets the "event_id" field if the given value is not nil.
+func (eauo *EventAdminUpdateOne) SetNillableEventID(i *int) *EventAdminUpdateOne {
+	if i != nil {
+		eauo.SetEventID(*i)
+	}
+	return eauo
+}
+
+// SetUserID sets the "user_id" field.
+func (eauo *EventAdminUpdateOne) SetUserID(i int) *EventAdminUpdateOne {
+	eauo.mutation.SetUserID(i)
+	return eauo
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (eauo *EventAdminUpdateOne) SetNillableUserID(i *int) *EventAdminUpdateOne {
+	if i != nil {
+		eauo.SetUserID(*i)
+	}
+	return eauo
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (eauo *EventAdminUpdateOne) SetCreatedAt(t time.Time) *EventAdminUpdateOne {
 	eauo.mutation.SetCreatedAt(t)
@@ -230,37 +272,9 @@ func (eauo *EventAdminUpdateOne) SetNillableCreatedAt(t *time.Time) *EventAdminU
 	return eauo
 }
 
-// SetEventID sets the "event" edge to the Event entity by ID.
-func (eauo *EventAdminUpdateOne) SetEventID(id int) *EventAdminUpdateOne {
-	eauo.mutation.SetEventID(id)
-	return eauo
-}
-
-// SetNillableEventID sets the "event" edge to the Event entity by ID if the given value is not nil.
-func (eauo *EventAdminUpdateOne) SetNillableEventID(id *int) *EventAdminUpdateOne {
-	if id != nil {
-		eauo = eauo.SetEventID(*id)
-	}
-	return eauo
-}
-
 // SetEvent sets the "event" edge to the Event entity.
 func (eauo *EventAdminUpdateOne) SetEvent(e *Event) *EventAdminUpdateOne {
 	return eauo.SetEventID(e.ID)
-}
-
-// SetUserID sets the "user" edge to the User entity by ID.
-func (eauo *EventAdminUpdateOne) SetUserID(id int) *EventAdminUpdateOne {
-	eauo.mutation.SetUserID(id)
-	return eauo
-}
-
-// SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
-func (eauo *EventAdminUpdateOne) SetNillableUserID(id *int) *EventAdminUpdateOne {
-	if id != nil {
-		eauo = eauo.SetUserID(*id)
-	}
-	return eauo
 }
 
 // SetUser sets the "user" edge to the User entity.
@@ -325,7 +339,21 @@ func (eauo *EventAdminUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (eauo *EventAdminUpdateOne) check() error {
+	if eauo.mutation.EventCleared() && len(eauo.mutation.EventIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "EventAdmin.event"`)
+	}
+	if eauo.mutation.UserCleared() && len(eauo.mutation.UserIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "EventAdmin.user"`)
+	}
+	return nil
+}
+
 func (eauo *EventAdminUpdateOne) sqlSave(ctx context.Context) (_node *EventAdmin, err error) {
+	if err := eauo.check(); err != nil {
+		return _node, err
+	}
 	_spec := sqlgraph.NewUpdateSpec(eventadmin.Table, eventadmin.Columns, sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt))
 	id, ok := eauo.mutation.ID()
 	if !ok {
@@ -357,7 +385,7 @@ func (eauo *EventAdminUpdateOne) sqlSave(ctx context.Context) (_node *EventAdmin
 	if eauo.mutation.EventCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   eventadmin.EventTable,
 			Columns: []string{eventadmin.EventColumn},
 			Bidi:    false,
@@ -370,7 +398,7 @@ func (eauo *EventAdminUpdateOne) sqlSave(ctx context.Context) (_node *EventAdmin
 	if nodes := eauo.mutation.EventIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   eventadmin.EventTable,
 			Columns: []string{eventadmin.EventColumn},
 			Bidi:    false,
@@ -386,7 +414,7 @@ func (eauo *EventAdminUpdateOne) sqlSave(ctx context.Context) (_node *EventAdmin
 	if eauo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   eventadmin.UserTable,
 			Columns: []string{eventadmin.UserColumn},
 			Bidi:    false,
@@ -399,7 +427,7 @@ func (eauo *EventAdminUpdateOne) sqlSave(ctx context.Context) (_node *EventAdmin
 	if nodes := eauo.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   eventadmin.UserTable,
 			Columns: []string{eventadmin.UserColumn},
 			Bidi:    false,

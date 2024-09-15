@@ -26,10 +26,9 @@ type EventQuery struct {
 	order           []event.OrderOption
 	inters          []Interceptor
 	predicates      []predicate.Event
-	withCreatedBy   *UserQuery
-	withPosts       *PostQuery
+	withCreator     *UserQuery
 	withEventAdmins *EventAdminQuery
-	withFKs         bool
+	withPosts       *PostQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -66,8 +65,8 @@ func (eq *EventQuery) Order(o ...event.OrderOption) *EventQuery {
 	return eq
 }
 
-// QueryCreatedBy chains the current query on the "created_by" edge.
-func (eq *EventQuery) QueryCreatedBy() *UserQuery {
+// QueryCreator chains the current query on the "creator" edge.
+func (eq *EventQuery) QueryCreator() *UserQuery {
 	query := (&UserClient{config: eq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := eq.prepareQuery(ctx); err != nil {
@@ -80,29 +79,7 @@ func (eq *EventQuery) QueryCreatedBy() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(event.Table, event.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, event.CreatedByTable, event.CreatedByColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(eq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryPosts chains the current query on the "posts" edge.
-func (eq *EventQuery) QueryPosts() *PostQuery {
-	query := (&PostClient{config: eq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := eq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := eq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(event.Table, event.FieldID, selector),
-			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, event.PostsTable, event.PostsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, event.CreatorTable, event.CreatorColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(eq.driver.Dialect(), step)
 		return fromU, nil
@@ -124,7 +101,29 @@ func (eq *EventQuery) QueryEventAdmins() *EventAdminQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(event.Table, event.FieldID, selector),
 			sqlgraph.To(eventadmin.Table, eventadmin.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, event.EventAdminsTable, event.EventAdminsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, event.EventAdminsTable, event.EventAdminsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(eq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPosts chains the current query on the "posts" edge.
+func (eq *EventQuery) QueryPosts() *PostQuery {
+	query := (&PostClient{config: eq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := eq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := eq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(event.Table, event.FieldID, selector),
+			sqlgraph.To(post.Table, post.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, event.PostsTable, event.PostsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(eq.driver.Dialect(), step)
 		return fromU, nil
@@ -324,34 +323,23 @@ func (eq *EventQuery) Clone() *EventQuery {
 		order:           append([]event.OrderOption{}, eq.order...),
 		inters:          append([]Interceptor{}, eq.inters...),
 		predicates:      append([]predicate.Event{}, eq.predicates...),
-		withCreatedBy:   eq.withCreatedBy.Clone(),
-		withPosts:       eq.withPosts.Clone(),
+		withCreator:     eq.withCreator.Clone(),
 		withEventAdmins: eq.withEventAdmins.Clone(),
+		withPosts:       eq.withPosts.Clone(),
 		// clone intermediate query.
 		sql:  eq.sql.Clone(),
 		path: eq.path,
 	}
 }
 
-// WithCreatedBy tells the query-builder to eager-load the nodes that are connected to
-// the "created_by" edge. The optional arguments are used to configure the query builder of the edge.
-func (eq *EventQuery) WithCreatedBy(opts ...func(*UserQuery)) *EventQuery {
+// WithCreator tells the query-builder to eager-load the nodes that are connected to
+// the "creator" edge. The optional arguments are used to configure the query builder of the edge.
+func (eq *EventQuery) WithCreator(opts ...func(*UserQuery)) *EventQuery {
 	query := (&UserClient{config: eq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	eq.withCreatedBy = query
-	return eq
-}
-
-// WithPosts tells the query-builder to eager-load the nodes that are connected to
-// the "posts" edge. The optional arguments are used to configure the query builder of the edge.
-func (eq *EventQuery) WithPosts(opts ...func(*PostQuery)) *EventQuery {
-	query := (&PostClient{config: eq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	eq.withPosts = query
+	eq.withCreator = query
 	return eq
 }
 
@@ -363,6 +351,17 @@ func (eq *EventQuery) WithEventAdmins(opts ...func(*EventAdminQuery)) *EventQuer
 		opt(query)
 	}
 	eq.withEventAdmins = query
+	return eq
+}
+
+// WithPosts tells the query-builder to eager-load the nodes that are connected to
+// the "posts" edge. The optional arguments are used to configure the query builder of the edge.
+func (eq *EventQuery) WithPosts(opts ...func(*PostQuery)) *EventQuery {
+	query := (&PostClient{config: eq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	eq.withPosts = query
 	return eq
 }
 
@@ -443,20 +442,13 @@ func (eq *EventQuery) prepareQuery(ctx context.Context) error {
 func (eq *EventQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Event, error) {
 	var (
 		nodes       = []*Event{}
-		withFKs     = eq.withFKs
 		_spec       = eq.querySpec()
 		loadedTypes = [3]bool{
-			eq.withCreatedBy != nil,
-			eq.withPosts != nil,
+			eq.withCreator != nil,
 			eq.withEventAdmins != nil,
+			eq.withPosts != nil,
 		}
 	)
-	if eq.withCreatedBy != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, event.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Event).scanValues(nil, columns)
 	}
@@ -475,16 +467,9 @@ func (eq *EventQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Event,
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := eq.withCreatedBy; query != nil {
-		if err := eq.loadCreatedBy(ctx, query, nodes, nil,
-			func(n *Event, e *User) { n.Edges.CreatedBy = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := eq.withPosts; query != nil {
-		if err := eq.loadPosts(ctx, query, nodes,
-			func(n *Event) { n.Edges.Posts = []*Post{} },
-			func(n *Event, e *Post) { n.Edges.Posts = append(n.Edges.Posts, e) }); err != nil {
+	if query := eq.withCreator; query != nil {
+		if err := eq.loadCreator(ctx, query, nodes, nil,
+			func(n *Event, e *User) { n.Edges.Creator = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -495,17 +480,21 @@ func (eq *EventQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Event,
 			return nil, err
 		}
 	}
+	if query := eq.withPosts; query != nil {
+		if err := eq.loadPosts(ctx, query, nodes,
+			func(n *Event) { n.Edges.Posts = []*Post{} },
+			func(n *Event, e *Post) { n.Edges.Posts = append(n.Edges.Posts, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
-func (eq *EventQuery) loadCreatedBy(ctx context.Context, query *UserQuery, nodes []*Event, init func(*Event), assign func(*Event, *User)) error {
+func (eq *EventQuery) loadCreator(ctx context.Context, query *UserQuery, nodes []*Event, init func(*Event), assign func(*Event, *User)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*Event)
 	for i := range nodes {
-		if nodes[i].user_events == nil {
-			continue
-		}
-		fk := *nodes[i].user_events
+		fk := nodes[i].CreatorID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -522,71 +511,10 @@ func (eq *EventQuery) loadCreatedBy(ctx context.Context, query *UserQuery, nodes
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_events" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "creator_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (eq *EventQuery) loadPosts(ctx context.Context, query *PostQuery, nodes []*Event, init func(*Event), assign func(*Event, *Post)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*Event)
-	nids := make(map[int]map[*Event]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(event.PostsTable)
-		s.Join(joinT).On(s.C(post.FieldID), joinT.C(event.PostsPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(event.PostsPrimaryKey[0]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(event.PostsPrimaryKey[0]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*Event]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Post](ctx, query, qr, query.inters)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "posts" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
 		}
 	}
 	return nil
@@ -601,7 +529,9 @@ func (eq *EventQuery) loadEventAdmins(ctx context.Context, query *EventAdminQuer
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(eventadmin.FieldEventID)
+	}
 	query.Where(predicate.EventAdmin(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(event.EventAdminsColumn), fks...))
 	}))
@@ -610,13 +540,40 @@ func (eq *EventQuery) loadEventAdmins(ctx context.Context, query *EventAdminQuer
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.event_event_admins
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "event_event_admins" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.EventID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "event_event_admins" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "event_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (eq *EventQuery) loadPosts(ctx context.Context, query *PostQuery, nodes []*Event, init func(*Event), assign func(*Event, *Post)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Event)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(post.FieldEventID)
+	}
+	query.Where(predicate.Post(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(event.PostsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.EventID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "event_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -647,6 +604,9 @@ func (eq *EventQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != event.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if eq.withCreator != nil {
+			_spec.Node.AddColumnOnce(event.FieldCreatorID)
 		}
 	}
 	if ps := eq.predicates; len(ps) > 0 {

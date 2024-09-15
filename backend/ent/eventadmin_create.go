@@ -22,6 +22,18 @@ type EventAdminCreate struct {
 	hooks    []Hook
 }
 
+// SetEventID sets the "event_id" field.
+func (eac *EventAdminCreate) SetEventID(i int) *EventAdminCreate {
+	eac.mutation.SetEventID(i)
+	return eac
+}
+
+// SetUserID sets the "user_id" field.
+func (eac *EventAdminCreate) SetUserID(i int) *EventAdminCreate {
+	eac.mutation.SetUserID(i)
+	return eac
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (eac *EventAdminCreate) SetCreatedAt(t time.Time) *EventAdminCreate {
 	eac.mutation.SetCreatedAt(t)
@@ -36,37 +48,9 @@ func (eac *EventAdminCreate) SetNillableCreatedAt(t *time.Time) *EventAdminCreat
 	return eac
 }
 
-// SetEventID sets the "event" edge to the Event entity by ID.
-func (eac *EventAdminCreate) SetEventID(id int) *EventAdminCreate {
-	eac.mutation.SetEventID(id)
-	return eac
-}
-
-// SetNillableEventID sets the "event" edge to the Event entity by ID if the given value is not nil.
-func (eac *EventAdminCreate) SetNillableEventID(id *int) *EventAdminCreate {
-	if id != nil {
-		eac = eac.SetEventID(*id)
-	}
-	return eac
-}
-
 // SetEvent sets the "event" edge to the Event entity.
 func (eac *EventAdminCreate) SetEvent(e *Event) *EventAdminCreate {
 	return eac.SetEventID(e.ID)
-}
-
-// SetUserID sets the "user" edge to the User entity by ID.
-func (eac *EventAdminCreate) SetUserID(id int) *EventAdminCreate {
-	eac.mutation.SetUserID(id)
-	return eac
-}
-
-// SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
-func (eac *EventAdminCreate) SetNillableUserID(id *int) *EventAdminCreate {
-	if id != nil {
-		eac = eac.SetUserID(*id)
-	}
-	return eac
 }
 
 // SetUser sets the "user" edge to the User entity.
@@ -117,8 +101,20 @@ func (eac *EventAdminCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (eac *EventAdminCreate) check() error {
+	if _, ok := eac.mutation.EventID(); !ok {
+		return &ValidationError{Name: "event_id", err: errors.New(`ent: missing required field "EventAdmin.event_id"`)}
+	}
+	if _, ok := eac.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "EventAdmin.user_id"`)}
+	}
 	if _, ok := eac.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "EventAdmin.created_at"`)}
+	}
+	if len(eac.mutation.EventIDs()) == 0 {
+		return &ValidationError{Name: "event", err: errors.New(`ent: missing required edge "EventAdmin.event"`)}
+	}
+	if len(eac.mutation.UserIDs()) == 0 {
+		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "EventAdmin.user"`)}
 	}
 	return nil
 }
@@ -153,7 +149,7 @@ func (eac *EventAdminCreate) createSpec() (*EventAdmin, *sqlgraph.CreateSpec) {
 	if nodes := eac.mutation.EventIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   eventadmin.EventTable,
 			Columns: []string{eventadmin.EventColumn},
 			Bidi:    false,
@@ -164,13 +160,13 @@ func (eac *EventAdminCreate) createSpec() (*EventAdmin, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.event_event_admins = &nodes[0]
+		_node.EventID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := eac.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   eventadmin.UserTable,
 			Columns: []string{eventadmin.UserColumn},
 			Bidi:    false,
@@ -181,7 +177,7 @@ func (eac *EventAdminCreate) createSpec() (*EventAdmin, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.user_event_admins = &nodes[0]
+		_node.UserID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

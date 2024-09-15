@@ -1,12 +1,14 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
-// Event schema definition.
+// Event スキーマの定義
 type Event struct {
 	ent.Schema
 }
@@ -19,17 +21,21 @@ func (Event) Fields() []ent.Field {
 		field.String("qr_code_url").Optional(),
 		field.Time("start_time"),
 		field.Time("end_time"),
-		field.Time("created_at").Immutable(),
-		field.Time("updated_at").Optional(),
+		field.Time("created_at").Default(time.Now).Immutable(),
+		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
+		field.Int("creator_id"),
 	}
 }
 
 func (Event) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("created_by", User.Type).
-			Ref("events").
-			Unique(),
-		edge.To("posts", Post.Type),
-		edge.To("event_admins", EventAdmin.Type),
+		edge.To("creator", User.Type).
+			Unique().
+			Required().
+			Field("creator_id"),
+		edge.From("event_admins", EventAdmin.Type).
+			Ref("event"),
+		edge.From("posts", Post.Type).
+			Ref("event"),
 	}
 }

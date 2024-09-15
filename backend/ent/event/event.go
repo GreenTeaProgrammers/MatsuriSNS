@@ -3,6 +3,8 @@
 package event
 
 import (
+	"time"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 )
@@ -20,33 +22,45 @@ const (
 	FieldMapURL = "map_url"
 	// FieldQrCodeURL holds the string denoting the qr_code_url field in the database.
 	FieldQrCodeURL = "qr_code_url"
-	// EdgeCreatedBy holds the string denoting the created_by edge name in mutations.
-	EdgeCreatedBy = "created_by"
-	// EdgePosts holds the string denoting the posts edge name in mutations.
-	EdgePosts = "posts"
+	// FieldStartTime holds the string denoting the start_time field in the database.
+	FieldStartTime = "start_time"
+	// FieldEndTime holds the string denoting the end_time field in the database.
+	FieldEndTime = "end_time"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
+	// FieldCreatorID holds the string denoting the creator_id field in the database.
+	FieldCreatorID = "creator_id"
+	// EdgeCreator holds the string denoting the creator edge name in mutations.
+	EdgeCreator = "creator"
 	// EdgeEventAdmins holds the string denoting the event_admins edge name in mutations.
 	EdgeEventAdmins = "event_admins"
+	// EdgePosts holds the string denoting the posts edge name in mutations.
+	EdgePosts = "posts"
 	// Table holds the table name of the event in the database.
 	Table = "events"
-	// CreatedByTable is the table that holds the created_by relation/edge.
-	CreatedByTable = "events"
-	// CreatedByInverseTable is the table name for the User entity.
+	// CreatorTable is the table that holds the creator relation/edge.
+	CreatorTable = "events"
+	// CreatorInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
-	CreatedByInverseTable = "users"
-	// CreatedByColumn is the table column denoting the created_by relation/edge.
-	CreatedByColumn = "user_events"
-	// PostsTable is the table that holds the posts relation/edge. The primary key declared below.
-	PostsTable = "event_posts"
-	// PostsInverseTable is the table name for the Post entity.
-	// It exists in this package in order to avoid circular dependency with the "post" package.
-	PostsInverseTable = "posts"
+	CreatorInverseTable = "users"
+	// CreatorColumn is the table column denoting the creator relation/edge.
+	CreatorColumn = "creator_id"
 	// EventAdminsTable is the table that holds the event_admins relation/edge.
 	EventAdminsTable = "event_admins"
 	// EventAdminsInverseTable is the table name for the EventAdmin entity.
 	// It exists in this package in order to avoid circular dependency with the "eventadmin" package.
 	EventAdminsInverseTable = "event_admins"
 	// EventAdminsColumn is the table column denoting the event_admins relation/edge.
-	EventAdminsColumn = "event_event_admins"
+	EventAdminsColumn = "event_id"
+	// PostsTable is the table that holds the posts relation/edge.
+	PostsTable = "posts"
+	// PostsInverseTable is the table name for the Post entity.
+	// It exists in this package in order to avoid circular dependency with the "post" package.
+	PostsInverseTable = "posts"
+	// PostsColumn is the table column denoting the posts relation/edge.
+	PostsColumn = "event_id"
 )
 
 // Columns holds all SQL columns for event fields.
@@ -56,29 +70,17 @@ var Columns = []string{
 	FieldDescription,
 	FieldMapURL,
 	FieldQrCodeURL,
+	FieldStartTime,
+	FieldEndTime,
+	FieldCreatedAt,
+	FieldUpdatedAt,
+	FieldCreatorID,
 }
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "events"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"user_events",
-}
-
-var (
-	// PostsPrimaryKey and PostsColumn2 are the table columns denoting the
-	// primary key for the posts relation (M2M).
-	PostsPrimaryKey = []string{"event_id", "post_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -90,6 +92,12 @@ var (
 	TitleValidator func(string) error
 	// MapURLValidator is a validator for the "map_url" field. It is called by the builders before save.
 	MapURLValidator func(string) error
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
+	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
+	UpdateDefaultUpdatedAt func() time.Time
 )
 
 // OrderOption defines the ordering options for the Event queries.
@@ -120,24 +128,35 @@ func ByQrCodeURL(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldQrCodeURL, opts...).ToFunc()
 }
 
-// ByCreatedByField orders the results by created_by field.
-func ByCreatedByField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newCreatedByStep(), sql.OrderByField(field, opts...))
-	}
+// ByStartTime orders the results by the start_time field.
+func ByStartTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStartTime, opts...).ToFunc()
 }
 
-// ByPostsCount orders the results by posts count.
-func ByPostsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newPostsStep(), opts...)
-	}
+// ByEndTime orders the results by the end_time field.
+func ByEndTime(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEndTime, opts...).ToFunc()
 }
 
-// ByPosts orders the results by posts terms.
-func ByPosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByCreatedAt orders the results by the created_at field.
+func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedAt, opts...).ToFunc()
+}
+
+// ByUpdatedAt orders the results by the updated_at field.
+func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByCreatorID orders the results by the creator_id field.
+func ByCreatorID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatorID, opts...).ToFunc()
+}
+
+// ByCreatorField orders the results by creator field.
+func ByCreatorField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newPostsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newCreatorStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -154,24 +173,38 @@ func ByEventAdmins(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newEventAdminsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newCreatedByStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(CreatedByInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, CreatedByTable, CreatedByColumn),
-	)
+
+// ByPostsCount orders the results by posts count.
+func ByPostsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPostsStep(), opts...)
+	}
 }
-func newPostsStep() *sqlgraph.Step {
+
+// ByPosts orders the results by posts terms.
+func ByPosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPostsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newCreatorStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(PostsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, PostsTable, PostsPrimaryKey...),
+		sqlgraph.To(CreatorInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, CreatorTable, CreatorColumn),
 	)
 }
 func newEventAdminsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(EventAdminsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, EventAdminsTable, EventAdminsColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, EventAdminsTable, EventAdminsColumn),
+	)
+}
+func newPostsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PostsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, PostsTable, PostsColumn),
 	)
 }

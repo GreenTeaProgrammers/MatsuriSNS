@@ -31,16 +31,44 @@ func (pu *PostUpdate) Where(ps ...predicate.Post) *PostUpdate {
 	return pu
 }
 
-// SetComment sets the "comment" field.
-func (pu *PostUpdate) SetComment(s string) *PostUpdate {
-	pu.mutation.SetComment(s)
+// SetUserID sets the "user_id" field.
+func (pu *PostUpdate) SetUserID(i int) *PostUpdate {
+	pu.mutation.SetUserID(i)
 	return pu
 }
 
-// SetNillableComment sets the "comment" field if the given value is not nil.
-func (pu *PostUpdate) SetNillableComment(s *string) *PostUpdate {
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (pu *PostUpdate) SetNillableUserID(i *int) *PostUpdate {
+	if i != nil {
+		pu.SetUserID(*i)
+	}
+	return pu
+}
+
+// SetEventID sets the "event_id" field.
+func (pu *PostUpdate) SetEventID(i int) *PostUpdate {
+	pu.mutation.SetEventID(i)
+	return pu
+}
+
+// SetNillableEventID sets the "event_id" field if the given value is not nil.
+func (pu *PostUpdate) SetNillableEventID(i *int) *PostUpdate {
+	if i != nil {
+		pu.SetEventID(*i)
+	}
+	return pu
+}
+
+// SetContent sets the "content" field.
+func (pu *PostUpdate) SetContent(s string) *PostUpdate {
+	pu.mutation.SetContent(s)
+	return pu
+}
+
+// SetNillableContent sets the "content" field if the given value is not nil.
+func (pu *PostUpdate) SetNillableContent(s *string) *PostUpdate {
 	if s != nil {
-		pu.SetComment(*s)
+		pu.SetContent(*s)
 	}
 	return pu
 }
@@ -127,34 +155,14 @@ func (pu *PostUpdate) SetUpdatedAt(t time.Time) *PostUpdate {
 	return pu
 }
 
-// AddUserIDs adds the "user" edge to the User entity by IDs.
-func (pu *PostUpdate) AddUserIDs(ids ...int) *PostUpdate {
-	pu.mutation.AddUserIDs(ids...)
-	return pu
+// SetUser sets the "user" edge to the User entity.
+func (pu *PostUpdate) SetUser(u *User) *PostUpdate {
+	return pu.SetUserID(u.ID)
 }
 
-// AddUser adds the "user" edges to the User entity.
-func (pu *PostUpdate) AddUser(u ...*User) *PostUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return pu.AddUserIDs(ids...)
-}
-
-// AddEventIDs adds the "event" edge to the Event entity by IDs.
-func (pu *PostUpdate) AddEventIDs(ids ...int) *PostUpdate {
-	pu.mutation.AddEventIDs(ids...)
-	return pu
-}
-
-// AddEvent adds the "event" edges to the Event entity.
-func (pu *PostUpdate) AddEvent(e ...*Event) *PostUpdate {
-	ids := make([]int, len(e))
-	for i := range e {
-		ids[i] = e[i].ID
-	}
-	return pu.AddEventIDs(ids...)
+// SetEvent sets the "event" edge to the Event entity.
+func (pu *PostUpdate) SetEvent(e *Event) *PostUpdate {
+	return pu.SetEventID(e.ID)
 }
 
 // AddImageIDs adds the "images" edge to the PostImage entity by IDs.
@@ -177,46 +185,16 @@ func (pu *PostUpdate) Mutation() *PostMutation {
 	return pu.mutation
 }
 
-// ClearUser clears all "user" edges to the User entity.
+// ClearUser clears the "user" edge to the User entity.
 func (pu *PostUpdate) ClearUser() *PostUpdate {
 	pu.mutation.ClearUser()
 	return pu
 }
 
-// RemoveUserIDs removes the "user" edge to User entities by IDs.
-func (pu *PostUpdate) RemoveUserIDs(ids ...int) *PostUpdate {
-	pu.mutation.RemoveUserIDs(ids...)
-	return pu
-}
-
-// RemoveUser removes "user" edges to User entities.
-func (pu *PostUpdate) RemoveUser(u ...*User) *PostUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return pu.RemoveUserIDs(ids...)
-}
-
-// ClearEvent clears all "event" edges to the Event entity.
+// ClearEvent clears the "event" edge to the Event entity.
 func (pu *PostUpdate) ClearEvent() *PostUpdate {
 	pu.mutation.ClearEvent()
 	return pu
-}
-
-// RemoveEventIDs removes the "event" edge to Event entities by IDs.
-func (pu *PostUpdate) RemoveEventIDs(ids ...int) *PostUpdate {
-	pu.mutation.RemoveEventIDs(ids...)
-	return pu
-}
-
-// RemoveEvent removes "event" edges to Event entities.
-func (pu *PostUpdate) RemoveEvent(e ...*Event) *PostUpdate {
-	ids := make([]int, len(e))
-	for i := range e {
-		ids[i] = e[i].ID
-	}
-	return pu.RemoveEventIDs(ids...)
 }
 
 // ClearImages clears all "images" edges to the PostImage entity.
@@ -278,10 +256,16 @@ func (pu *PostUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (pu *PostUpdate) check() error {
-	if v, ok := pu.mutation.Comment(); ok {
-		if err := post.CommentValidator(v); err != nil {
-			return &ValidationError{Name: "comment", err: fmt.Errorf(`ent: validator failed for field "Post.comment": %w`, err)}
+	if v, ok := pu.mutation.Content(); ok {
+		if err := post.ContentValidator(v); err != nil {
+			return &ValidationError{Name: "content", err: fmt.Errorf(`ent: validator failed for field "Post.content": %w`, err)}
 		}
+	}
+	if pu.mutation.UserCleared() && len(pu.mutation.UserIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Post.user"`)
+	}
+	if pu.mutation.EventCleared() && len(pu.mutation.EventIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Post.event"`)
 	}
 	return nil
 }
@@ -298,8 +282,8 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := pu.mutation.Comment(); ok {
-		_spec.SetField(post.FieldComment, field.TypeString, value)
+	if value, ok := pu.mutation.Content(); ok {
+		_spec.SetField(post.FieldContent, field.TypeString, value)
 	}
 	if value, ok := pu.mutation.LocationX(); ok {
 		_spec.SetField(post.FieldLocationX, field.TypeFloat64, value)
@@ -327,39 +311,23 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
 			Table:   post.UserTable,
-			Columns: post.UserPrimaryKey,
+			Columns: []string{post.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pu.mutation.RemovedUserIDs(); len(nodes) > 0 && !pu.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   post.UserTable,
-			Columns: post.UserPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := pu.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
 			Table:   post.UserTable,
-			Columns: post.UserPrimaryKey,
+			Columns: []string{post.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -372,39 +340,23 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if pu.mutation.EventCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
 			Table:   post.EventTable,
-			Columns: post.EventPrimaryKey,
+			Columns: []string{post.EventColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pu.mutation.RemovedEventIDs(); len(nodes) > 0 && !pu.mutation.EventCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   post.EventTable,
-			Columns: post.EventPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := pu.mutation.EventIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
 			Table:   post.EventTable,
-			Columns: post.EventPrimaryKey,
+			Columns: []string{post.EventColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -418,7 +370,7 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if pu.mutation.ImagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   post.ImagesTable,
 			Columns: []string{post.ImagesColumn},
 			Bidi:    false,
@@ -431,7 +383,7 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := pu.mutation.RemovedImagesIDs(); len(nodes) > 0 && !pu.mutation.ImagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   post.ImagesTable,
 			Columns: []string{post.ImagesColumn},
 			Bidi:    false,
@@ -447,7 +399,7 @@ func (pu *PostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := pu.mutation.ImagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   post.ImagesTable,
 			Columns: []string{post.ImagesColumn},
 			Bidi:    false,
@@ -480,16 +432,44 @@ type PostUpdateOne struct {
 	mutation *PostMutation
 }
 
-// SetComment sets the "comment" field.
-func (puo *PostUpdateOne) SetComment(s string) *PostUpdateOne {
-	puo.mutation.SetComment(s)
+// SetUserID sets the "user_id" field.
+func (puo *PostUpdateOne) SetUserID(i int) *PostUpdateOne {
+	puo.mutation.SetUserID(i)
 	return puo
 }
 
-// SetNillableComment sets the "comment" field if the given value is not nil.
-func (puo *PostUpdateOne) SetNillableComment(s *string) *PostUpdateOne {
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (puo *PostUpdateOne) SetNillableUserID(i *int) *PostUpdateOne {
+	if i != nil {
+		puo.SetUserID(*i)
+	}
+	return puo
+}
+
+// SetEventID sets the "event_id" field.
+func (puo *PostUpdateOne) SetEventID(i int) *PostUpdateOne {
+	puo.mutation.SetEventID(i)
+	return puo
+}
+
+// SetNillableEventID sets the "event_id" field if the given value is not nil.
+func (puo *PostUpdateOne) SetNillableEventID(i *int) *PostUpdateOne {
+	if i != nil {
+		puo.SetEventID(*i)
+	}
+	return puo
+}
+
+// SetContent sets the "content" field.
+func (puo *PostUpdateOne) SetContent(s string) *PostUpdateOne {
+	puo.mutation.SetContent(s)
+	return puo
+}
+
+// SetNillableContent sets the "content" field if the given value is not nil.
+func (puo *PostUpdateOne) SetNillableContent(s *string) *PostUpdateOne {
 	if s != nil {
-		puo.SetComment(*s)
+		puo.SetContent(*s)
 	}
 	return puo
 }
@@ -576,34 +556,14 @@ func (puo *PostUpdateOne) SetUpdatedAt(t time.Time) *PostUpdateOne {
 	return puo
 }
 
-// AddUserIDs adds the "user" edge to the User entity by IDs.
-func (puo *PostUpdateOne) AddUserIDs(ids ...int) *PostUpdateOne {
-	puo.mutation.AddUserIDs(ids...)
-	return puo
+// SetUser sets the "user" edge to the User entity.
+func (puo *PostUpdateOne) SetUser(u *User) *PostUpdateOne {
+	return puo.SetUserID(u.ID)
 }
 
-// AddUser adds the "user" edges to the User entity.
-func (puo *PostUpdateOne) AddUser(u ...*User) *PostUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return puo.AddUserIDs(ids...)
-}
-
-// AddEventIDs adds the "event" edge to the Event entity by IDs.
-func (puo *PostUpdateOne) AddEventIDs(ids ...int) *PostUpdateOne {
-	puo.mutation.AddEventIDs(ids...)
-	return puo
-}
-
-// AddEvent adds the "event" edges to the Event entity.
-func (puo *PostUpdateOne) AddEvent(e ...*Event) *PostUpdateOne {
-	ids := make([]int, len(e))
-	for i := range e {
-		ids[i] = e[i].ID
-	}
-	return puo.AddEventIDs(ids...)
+// SetEvent sets the "event" edge to the Event entity.
+func (puo *PostUpdateOne) SetEvent(e *Event) *PostUpdateOne {
+	return puo.SetEventID(e.ID)
 }
 
 // AddImageIDs adds the "images" edge to the PostImage entity by IDs.
@@ -626,46 +586,16 @@ func (puo *PostUpdateOne) Mutation() *PostMutation {
 	return puo.mutation
 }
 
-// ClearUser clears all "user" edges to the User entity.
+// ClearUser clears the "user" edge to the User entity.
 func (puo *PostUpdateOne) ClearUser() *PostUpdateOne {
 	puo.mutation.ClearUser()
 	return puo
 }
 
-// RemoveUserIDs removes the "user" edge to User entities by IDs.
-func (puo *PostUpdateOne) RemoveUserIDs(ids ...int) *PostUpdateOne {
-	puo.mutation.RemoveUserIDs(ids...)
-	return puo
-}
-
-// RemoveUser removes "user" edges to User entities.
-func (puo *PostUpdateOne) RemoveUser(u ...*User) *PostUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return puo.RemoveUserIDs(ids...)
-}
-
-// ClearEvent clears all "event" edges to the Event entity.
+// ClearEvent clears the "event" edge to the Event entity.
 func (puo *PostUpdateOne) ClearEvent() *PostUpdateOne {
 	puo.mutation.ClearEvent()
 	return puo
-}
-
-// RemoveEventIDs removes the "event" edge to Event entities by IDs.
-func (puo *PostUpdateOne) RemoveEventIDs(ids ...int) *PostUpdateOne {
-	puo.mutation.RemoveEventIDs(ids...)
-	return puo
-}
-
-// RemoveEvent removes "event" edges to Event entities.
-func (puo *PostUpdateOne) RemoveEvent(e ...*Event) *PostUpdateOne {
-	ids := make([]int, len(e))
-	for i := range e {
-		ids[i] = e[i].ID
-	}
-	return puo.RemoveEventIDs(ids...)
 }
 
 // ClearImages clears all "images" edges to the PostImage entity.
@@ -740,10 +670,16 @@ func (puo *PostUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (puo *PostUpdateOne) check() error {
-	if v, ok := puo.mutation.Comment(); ok {
-		if err := post.CommentValidator(v); err != nil {
-			return &ValidationError{Name: "comment", err: fmt.Errorf(`ent: validator failed for field "Post.comment": %w`, err)}
+	if v, ok := puo.mutation.Content(); ok {
+		if err := post.ContentValidator(v); err != nil {
+			return &ValidationError{Name: "content", err: fmt.Errorf(`ent: validator failed for field "Post.content": %w`, err)}
 		}
+	}
+	if puo.mutation.UserCleared() && len(puo.mutation.UserIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Post.user"`)
+	}
+	if puo.mutation.EventCleared() && len(puo.mutation.EventIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Post.event"`)
 	}
 	return nil
 }
@@ -777,8 +713,8 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 			}
 		}
 	}
-	if value, ok := puo.mutation.Comment(); ok {
-		_spec.SetField(post.FieldComment, field.TypeString, value)
+	if value, ok := puo.mutation.Content(); ok {
+		_spec.SetField(post.FieldContent, field.TypeString, value)
 	}
 	if value, ok := puo.mutation.LocationX(); ok {
 		_spec.SetField(post.FieldLocationX, field.TypeFloat64, value)
@@ -806,39 +742,23 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 	}
 	if puo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
 			Table:   post.UserTable,
-			Columns: post.UserPrimaryKey,
+			Columns: []string{post.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := puo.mutation.RemovedUserIDs(); len(nodes) > 0 && !puo.mutation.UserCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   post.UserTable,
-			Columns: post.UserPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := puo.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
 			Table:   post.UserTable,
-			Columns: post.UserPrimaryKey,
+			Columns: []string{post.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -851,39 +771,23 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 	}
 	if puo.mutation.EventCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
 			Table:   post.EventTable,
-			Columns: post.EventPrimaryKey,
+			Columns: []string{post.EventColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := puo.mutation.RemovedEventIDs(); len(nodes) > 0 && !puo.mutation.EventCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   post.EventTable,
-			Columns: post.EventPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := puo.mutation.EventIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
 			Table:   post.EventTable,
-			Columns: post.EventPrimaryKey,
+			Columns: []string{post.EventColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -897,7 +801,7 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 	if puo.mutation.ImagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   post.ImagesTable,
 			Columns: []string{post.ImagesColumn},
 			Bidi:    false,
@@ -910,7 +814,7 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 	if nodes := puo.mutation.RemovedImagesIDs(); len(nodes) > 0 && !puo.mutation.ImagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   post.ImagesTable,
 			Columns: []string{post.ImagesColumn},
 			Bidi:    false,
@@ -926,7 +830,7 @@ func (puo *PostUpdateOne) sqlSave(ctx context.Context) (_node *Post, err error) 
 	if nodes := puo.mutation.ImagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   post.ImagesTable,
 			Columns: []string{post.ImagesColumn},
 			Bidi:    false,

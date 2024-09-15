@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -28,6 +29,20 @@ func (piu *PostImageUpdate) Where(ps ...predicate.PostImage) *PostImageUpdate {
 	return piu
 }
 
+// SetPostID sets the "post_id" field.
+func (piu *PostImageUpdate) SetPostID(i int) *PostImageUpdate {
+	piu.mutation.SetPostID(i)
+	return piu
+}
+
+// SetNillablePostID sets the "post_id" field if the given value is not nil.
+func (piu *PostImageUpdate) SetNillablePostID(i *int) *PostImageUpdate {
+	if i != nil {
+		piu.SetPostID(*i)
+	}
+	return piu
+}
+
 // SetImageURL sets the "image_url" field.
 func (piu *PostImageUpdate) SetImageURL(s string) *PostImageUpdate {
 	piu.mutation.SetImageURL(s)
@@ -42,16 +57,16 @@ func (piu *PostImageUpdate) SetNillableImageURL(s *string) *PostImageUpdate {
 	return piu
 }
 
-// SetPostID sets the "post" edge to the Post entity by ID.
-func (piu *PostImageUpdate) SetPostID(id int) *PostImageUpdate {
-	piu.mutation.SetPostID(id)
+// SetCreatedAt sets the "created_at" field.
+func (piu *PostImageUpdate) SetCreatedAt(t time.Time) *PostImageUpdate {
+	piu.mutation.SetCreatedAt(t)
 	return piu
 }
 
-// SetNillablePostID sets the "post" edge to the Post entity by ID if the given value is not nil.
-func (piu *PostImageUpdate) SetNillablePostID(id *int) *PostImageUpdate {
-	if id != nil {
-		piu = piu.SetPostID(*id)
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (piu *PostImageUpdate) SetNillableCreatedAt(t *time.Time) *PostImageUpdate {
+	if t != nil {
+		piu.SetCreatedAt(*t)
 	}
 	return piu
 }
@@ -106,6 +121,9 @@ func (piu *PostImageUpdate) check() error {
 			return &ValidationError{Name: "image_url", err: fmt.Errorf(`ent: validator failed for field "PostImage.image_url": %w`, err)}
 		}
 	}
+	if piu.mutation.PostCleared() && len(piu.mutation.PostIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "PostImage.post"`)
+	}
 	return nil
 }
 
@@ -124,10 +142,13 @@ func (piu *PostImageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := piu.mutation.ImageURL(); ok {
 		_spec.SetField(postimage.FieldImageURL, field.TypeString, value)
 	}
+	if value, ok := piu.mutation.CreatedAt(); ok {
+		_spec.SetField(postimage.FieldCreatedAt, field.TypeTime, value)
+	}
 	if piu.mutation.PostCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   postimage.PostTable,
 			Columns: []string{postimage.PostColumn},
 			Bidi:    false,
@@ -140,7 +161,7 @@ func (piu *PostImageUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := piu.mutation.PostIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   postimage.PostTable,
 			Columns: []string{postimage.PostColumn},
 			Bidi:    false,
@@ -173,6 +194,20 @@ type PostImageUpdateOne struct {
 	mutation *PostImageMutation
 }
 
+// SetPostID sets the "post_id" field.
+func (piuo *PostImageUpdateOne) SetPostID(i int) *PostImageUpdateOne {
+	piuo.mutation.SetPostID(i)
+	return piuo
+}
+
+// SetNillablePostID sets the "post_id" field if the given value is not nil.
+func (piuo *PostImageUpdateOne) SetNillablePostID(i *int) *PostImageUpdateOne {
+	if i != nil {
+		piuo.SetPostID(*i)
+	}
+	return piuo
+}
+
 // SetImageURL sets the "image_url" field.
 func (piuo *PostImageUpdateOne) SetImageURL(s string) *PostImageUpdateOne {
 	piuo.mutation.SetImageURL(s)
@@ -187,16 +222,16 @@ func (piuo *PostImageUpdateOne) SetNillableImageURL(s *string) *PostImageUpdateO
 	return piuo
 }
 
-// SetPostID sets the "post" edge to the Post entity by ID.
-func (piuo *PostImageUpdateOne) SetPostID(id int) *PostImageUpdateOne {
-	piuo.mutation.SetPostID(id)
+// SetCreatedAt sets the "created_at" field.
+func (piuo *PostImageUpdateOne) SetCreatedAt(t time.Time) *PostImageUpdateOne {
+	piuo.mutation.SetCreatedAt(t)
 	return piuo
 }
 
-// SetNillablePostID sets the "post" edge to the Post entity by ID if the given value is not nil.
-func (piuo *PostImageUpdateOne) SetNillablePostID(id *int) *PostImageUpdateOne {
-	if id != nil {
-		piuo = piuo.SetPostID(*id)
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (piuo *PostImageUpdateOne) SetNillableCreatedAt(t *time.Time) *PostImageUpdateOne {
+	if t != nil {
+		piuo.SetCreatedAt(*t)
 	}
 	return piuo
 }
@@ -264,6 +299,9 @@ func (piuo *PostImageUpdateOne) check() error {
 			return &ValidationError{Name: "image_url", err: fmt.Errorf(`ent: validator failed for field "PostImage.image_url": %w`, err)}
 		}
 	}
+	if piuo.mutation.PostCleared() && len(piuo.mutation.PostIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "PostImage.post"`)
+	}
 	return nil
 }
 
@@ -299,10 +337,13 @@ func (piuo *PostImageUpdateOne) sqlSave(ctx context.Context) (_node *PostImage, 
 	if value, ok := piuo.mutation.ImageURL(); ok {
 		_spec.SetField(postimage.FieldImageURL, field.TypeString, value)
 	}
+	if value, ok := piuo.mutation.CreatedAt(); ok {
+		_spec.SetField(postimage.FieldCreatedAt, field.TypeTime, value)
+	}
 	if piuo.mutation.PostCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   postimage.PostTable,
 			Columns: []string{postimage.PostColumn},
 			Bidi:    false,
@@ -315,7 +356,7 @@ func (piuo *PostImageUpdateOne) sqlSave(ctx context.Context) (_node *PostImage, 
 	if nodes := piuo.mutation.PostIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
+			Inverse: false,
 			Table:   postimage.PostTable,
 			Columns: []string{postimage.PostColumn},
 			Bidi:    false,

@@ -14,6 +14,10 @@ const (
 	Label = "event_admin"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldEventID holds the string denoting the event_id field in the database.
+	FieldEventID = "event_id"
+	// FieldUserID holds the string denoting the user_id field in the database.
+	FieldUserID = "user_id"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// EdgeEvent holds the string denoting the event edge name in mutations.
@@ -28,38 +32,28 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "event" package.
 	EventInverseTable = "events"
 	// EventColumn is the table column denoting the event relation/edge.
-	EventColumn = "event_event_admins"
+	EventColumn = "event_id"
 	// UserTable is the table that holds the user relation/edge.
 	UserTable = "event_admins"
 	// UserInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
-	UserColumn = "user_event_admins"
+	UserColumn = "user_id"
 )
 
 // Columns holds all SQL columns for eventadmin fields.
 var Columns = []string{
 	FieldID,
+	FieldEventID,
+	FieldUserID,
 	FieldCreatedAt,
-}
-
-// ForeignKeys holds the SQL foreign-keys that are owned by the "event_admins"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"event_event_admins",
-	"user_event_admins",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -77,6 +71,16 @@ type OrderOption func(*sql.Selector)
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
+}
+
+// ByEventID orders the results by the event_id field.
+func ByEventID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEventID, opts...).ToFunc()
+}
+
+// ByUserID orders the results by the user_id field.
+func ByUserID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUserID, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.
@@ -101,13 +105,13 @@ func newEventStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(EventInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, EventTable, EventColumn),
+		sqlgraph.Edge(sqlgraph.M2O, false, EventTable, EventColumn),
 	)
 }
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+		sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
 	)
 }

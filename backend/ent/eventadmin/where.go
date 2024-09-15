@@ -55,9 +55,59 @@ func IDLTE(id int) predicate.EventAdmin {
 	return predicate.EventAdmin(sql.FieldLTE(FieldID, id))
 }
 
+// EventID applies equality check predicate on the "event_id" field. It's identical to EventIDEQ.
+func EventID(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldEQ(FieldEventID, v))
+}
+
+// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
+func UserID(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldEQ(FieldUserID, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.EventAdmin {
 	return predicate.EventAdmin(sql.FieldEQ(FieldCreatedAt, v))
+}
+
+// EventIDEQ applies the EQ predicate on the "event_id" field.
+func EventIDEQ(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldEQ(FieldEventID, v))
+}
+
+// EventIDNEQ applies the NEQ predicate on the "event_id" field.
+func EventIDNEQ(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldNEQ(FieldEventID, v))
+}
+
+// EventIDIn applies the In predicate on the "event_id" field.
+func EventIDIn(vs ...int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldIn(FieldEventID, vs...))
+}
+
+// EventIDNotIn applies the NotIn predicate on the "event_id" field.
+func EventIDNotIn(vs ...int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldNotIn(FieldEventID, vs...))
+}
+
+// UserIDEQ applies the EQ predicate on the "user_id" field.
+func UserIDEQ(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldEQ(FieldUserID, v))
+}
+
+// UserIDNEQ applies the NEQ predicate on the "user_id" field.
+func UserIDNEQ(v int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldNEQ(FieldUserID, v))
+}
+
+// UserIDIn applies the In predicate on the "user_id" field.
+func UserIDIn(vs ...int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldIn(FieldUserID, vs...))
+}
+
+// UserIDNotIn applies the NotIn predicate on the "user_id" field.
+func UserIDNotIn(vs ...int) predicate.EventAdmin {
+	return predicate.EventAdmin(sql.FieldNotIn(FieldUserID, vs...))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -105,7 +155,7 @@ func HasEvent() predicate.EventAdmin {
 	return predicate.EventAdmin(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, EventTable, EventColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, EventTable, EventColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -128,7 +178,7 @@ func HasUser() predicate.EventAdmin {
 	return predicate.EventAdmin(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

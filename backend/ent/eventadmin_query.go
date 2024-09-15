@@ -26,7 +26,6 @@ type EventAdminQuery struct {
 	predicates []predicate.EventAdmin
 	withEvent  *EventQuery
 	withUser   *UserQuery
-	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -77,7 +76,7 @@ func (eaq *EventAdminQuery) QueryEvent() *EventQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(eventadmin.Table, eventadmin.FieldID, selector),
 			sqlgraph.To(event.Table, event.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, eventadmin.EventTable, eventadmin.EventColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, eventadmin.EventTable, eventadmin.EventColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(eaq.driver.Dialect(), step)
 		return fromU, nil
@@ -99,7 +98,7 @@ func (eaq *EventAdminQuery) QueryUser() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(eventadmin.Table, eventadmin.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, eventadmin.UserTable, eventadmin.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, eventadmin.UserTable, eventadmin.UserColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(eaq.driver.Dialect(), step)
 		return fromU, nil
@@ -335,12 +334,12 @@ func (eaq *EventAdminQuery) WithUser(opts ...func(*UserQuery)) *EventAdminQuery 
 // Example:
 //
 //	var v []struct {
-//		CreatedAt time.Time `json:"created_at,omitempty"`
+//		EventID int `json:"event_id,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.EventAdmin.Query().
-//		GroupBy(eventadmin.FieldCreatedAt).
+//		GroupBy(eventadmin.FieldEventID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (eaq *EventAdminQuery) GroupBy(field string, fields ...string) *EventAdminGroupBy {
@@ -358,11 +357,11 @@ func (eaq *EventAdminQuery) GroupBy(field string, fields ...string) *EventAdminG
 // Example:
 //
 //	var v []struct {
-//		CreatedAt time.Time `json:"created_at,omitempty"`
+//		EventID int `json:"event_id,omitempty"`
 //	}
 //
 //	client.EventAdmin.Query().
-//		Select(eventadmin.FieldCreatedAt).
+//		Select(eventadmin.FieldEventID).
 //		Scan(ctx, &v)
 func (eaq *EventAdminQuery) Select(fields ...string) *EventAdminSelect {
 	eaq.ctx.Fields = append(eaq.ctx.Fields, fields...)
@@ -406,19 +405,12 @@ func (eaq *EventAdminQuery) prepareQuery(ctx context.Context) error {
 func (eaq *EventAdminQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*EventAdmin, error) {
 	var (
 		nodes       = []*EventAdmin{}
-		withFKs     = eaq.withFKs
 		_spec       = eaq.querySpec()
 		loadedTypes = [2]bool{
 			eaq.withEvent != nil,
 			eaq.withUser != nil,
 		}
 	)
-	if eaq.withEvent != nil || eaq.withUser != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, eventadmin.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*EventAdmin).scanValues(nil, columns)
 	}
@@ -456,10 +448,7 @@ func (eaq *EventAdminQuery) loadEvent(ctx context.Context, query *EventQuery, no
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*EventAdmin)
 	for i := range nodes {
-		if nodes[i].event_event_admins == nil {
-			continue
-		}
-		fk := *nodes[i].event_event_admins
+		fk := nodes[i].EventID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -476,7 +465,7 @@ func (eaq *EventAdminQuery) loadEvent(ctx context.Context, query *EventQuery, no
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "event_event_admins" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "event_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -488,10 +477,7 @@ func (eaq *EventAdminQuery) loadUser(ctx context.Context, query *UserQuery, node
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*EventAdmin)
 	for i := range nodes {
-		if nodes[i].user_event_admins == nil {
-			continue
-		}
-		fk := *nodes[i].user_event_admins
+		fk := nodes[i].UserID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -508,7 +494,7 @@ func (eaq *EventAdminQuery) loadUser(ctx context.Context, query *UserQuery, node
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_event_admins" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "user_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -541,6 +527,12 @@ func (eaq *EventAdminQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != eventadmin.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if eaq.withEvent != nil {
+			_spec.Node.AddColumnOnce(eventadmin.FieldEventID)
+		}
+		if eaq.withUser != nil {
+			_spec.Node.AddColumnOnce(eventadmin.FieldUserID)
 		}
 	}
 	if ps := eaq.predicates; len(ps) > 0 {

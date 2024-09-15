@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -20,8 +21,12 @@ type User struct {
 	Username string `json:"username,omitempty"`
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
-	// PasswordHash holds the value of the "password_hash" field.
-	PasswordHash string `json:"password_hash,omitempty"`
+	// HashedPassword holds the value of the "hashed_password" field.
+	HashedPassword string `json:"hashed_password,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -32,8 +37,8 @@ type User struct {
 type UserEdges struct {
 	// Posts holds the value of the posts edge.
 	Posts []*Post `json:"posts,omitempty"`
-	// Events holds the value of the events edge.
-	Events []*Event `json:"events,omitempty"`
+	// CreatedEvents holds the value of the created_events edge.
+	CreatedEvents []*Event `json:"created_events,omitempty"`
 	// EventAdmins holds the value of the event_admins edge.
 	EventAdmins []*EventAdmin `json:"event_admins,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -50,13 +55,13 @@ func (e UserEdges) PostsOrErr() ([]*Post, error) {
 	return nil, &NotLoadedError{edge: "posts"}
 }
 
-// EventsOrErr returns the Events value or an error if the edge
+// CreatedEventsOrErr returns the CreatedEvents value or an error if the edge
 // was not loaded in eager-loading.
-func (e UserEdges) EventsOrErr() ([]*Event, error) {
+func (e UserEdges) CreatedEventsOrErr() ([]*Event, error) {
 	if e.loadedTypes[1] {
-		return e.Events, nil
+		return e.CreatedEvents, nil
 	}
-	return nil, &NotLoadedError{edge: "events"}
+	return nil, &NotLoadedError{edge: "created_events"}
 }
 
 // EventAdminsOrErr returns the EventAdmins value or an error if the edge
@@ -75,8 +80,10 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldUsername, user.FieldEmail, user.FieldPasswordHash:
+		case user.FieldUsername, user.FieldEmail, user.FieldHashedPassword:
 			values[i] = new(sql.NullString)
+		case user.FieldCreatedAt, user.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -110,11 +117,23 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.Email = value.String
 			}
-		case user.FieldPasswordHash:
+		case user.FieldHashedPassword:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field password_hash", values[i])
+				return fmt.Errorf("unexpected type %T for field hashed_password", values[i])
 			} else if value.Valid {
-				u.PasswordHash = value.String
+				u.HashedPassword = value.String
+			}
+		case user.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				u.CreatedAt = value.Time
+			}
+		case user.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				u.UpdatedAt = value.Time
 			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
@@ -134,9 +153,9 @@ func (u *User) QueryPosts() *PostQuery {
 	return NewUserClient(u.config).QueryPosts(u)
 }
 
-// QueryEvents queries the "events" edge of the User entity.
-func (u *User) QueryEvents() *EventQuery {
-	return NewUserClient(u.config).QueryEvents(u)
+// QueryCreatedEvents queries the "created_events" edge of the User entity.
+func (u *User) QueryCreatedEvents() *EventQuery {
+	return NewUserClient(u.config).QueryCreatedEvents(u)
 }
 
 // QueryEventAdmins queries the "event_admins" edge of the User entity.
@@ -173,8 +192,14 @@ func (u *User) String() string {
 	builder.WriteString("email=")
 	builder.WriteString(u.Email)
 	builder.WriteString(", ")
-	builder.WriteString("password_hash=")
-	builder.WriteString(u.PasswordHash)
+	builder.WriteString("hashed_password=")
+	builder.WriteString(u.HashedPassword)
+	builder.WriteString(", ")
+	builder.WriteString("created_at=")
+	builder.WriteString(u.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("updated_at=")
+	builder.WriteString(u.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

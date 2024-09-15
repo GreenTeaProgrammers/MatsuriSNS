@@ -23,9 +23,21 @@ type PostCreate struct {
 	hooks    []Hook
 }
 
-// SetComment sets the "comment" field.
-func (pc *PostCreate) SetComment(s string) *PostCreate {
-	pc.mutation.SetComment(s)
+// SetUserID sets the "user_id" field.
+func (pc *PostCreate) SetUserID(i int) *PostCreate {
+	pc.mutation.SetUserID(i)
+	return pc
+}
+
+// SetEventID sets the "event_id" field.
+func (pc *PostCreate) SetEventID(i int) *PostCreate {
+	pc.mutation.SetEventID(i)
+	return pc
+}
+
+// SetContent sets the "content" field.
+func (pc *PostCreate) SetContent(s string) *PostCreate {
+	pc.mutation.SetContent(s)
 	return pc
 }
 
@@ -83,34 +95,14 @@ func (pc *PostCreate) SetNillableUpdatedAt(t *time.Time) *PostCreate {
 	return pc
 }
 
-// AddUserIDs adds the "user" edge to the User entity by IDs.
-func (pc *PostCreate) AddUserIDs(ids ...int) *PostCreate {
-	pc.mutation.AddUserIDs(ids...)
-	return pc
+// SetUser sets the "user" edge to the User entity.
+func (pc *PostCreate) SetUser(u *User) *PostCreate {
+	return pc.SetUserID(u.ID)
 }
 
-// AddUser adds the "user" edges to the User entity.
-func (pc *PostCreate) AddUser(u ...*User) *PostCreate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return pc.AddUserIDs(ids...)
-}
-
-// AddEventIDs adds the "event" edge to the Event entity by IDs.
-func (pc *PostCreate) AddEventIDs(ids ...int) *PostCreate {
-	pc.mutation.AddEventIDs(ids...)
-	return pc
-}
-
-// AddEvent adds the "event" edges to the Event entity.
-func (pc *PostCreate) AddEvent(e ...*Event) *PostCreate {
-	ids := make([]int, len(e))
-	for i := range e {
-		ids[i] = e[i].ID
-	}
-	return pc.AddEventIDs(ids...)
+// SetEvent sets the "event" edge to the Event entity.
+func (pc *PostCreate) SetEvent(e *Event) *PostCreate {
+	return pc.SetEventID(e.ID)
 }
 
 // AddImageIDs adds the "images" edge to the PostImage entity by IDs.
@@ -175,12 +167,18 @@ func (pc *PostCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (pc *PostCreate) check() error {
-	if _, ok := pc.mutation.Comment(); !ok {
-		return &ValidationError{Name: "comment", err: errors.New(`ent: missing required field "Post.comment"`)}
+	if _, ok := pc.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "Post.user_id"`)}
 	}
-	if v, ok := pc.mutation.Comment(); ok {
-		if err := post.CommentValidator(v); err != nil {
-			return &ValidationError{Name: "comment", err: fmt.Errorf(`ent: validator failed for field "Post.comment": %w`, err)}
+	if _, ok := pc.mutation.EventID(); !ok {
+		return &ValidationError{Name: "event_id", err: errors.New(`ent: missing required field "Post.event_id"`)}
+	}
+	if _, ok := pc.mutation.Content(); !ok {
+		return &ValidationError{Name: "content", err: errors.New(`ent: missing required field "Post.content"`)}
+	}
+	if v, ok := pc.mutation.Content(); ok {
+		if err := post.ContentValidator(v); err != nil {
+			return &ValidationError{Name: "content", err: fmt.Errorf(`ent: validator failed for field "Post.content": %w`, err)}
 		}
 	}
 	if _, ok := pc.mutation.LocationX(); !ok {
@@ -194,6 +192,12 @@ func (pc *PostCreate) check() error {
 	}
 	if _, ok := pc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Post.updated_at"`)}
+	}
+	if len(pc.mutation.UserIDs()) == 0 {
+		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Post.user"`)}
+	}
+	if len(pc.mutation.EventIDs()) == 0 {
+		return &ValidationError{Name: "event", err: errors.New(`ent: missing required edge "Post.event"`)}
 	}
 	return nil
 }
@@ -221,9 +225,9 @@ func (pc *PostCreate) createSpec() (*Post, *sqlgraph.CreateSpec) {
 		_node = &Post{config: pc.config}
 		_spec = sqlgraph.NewCreateSpec(post.Table, sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt))
 	)
-	if value, ok := pc.mutation.Comment(); ok {
-		_spec.SetField(post.FieldComment, field.TypeString, value)
-		_node.Comment = value
+	if value, ok := pc.mutation.Content(); ok {
+		_spec.SetField(post.FieldContent, field.TypeString, value)
+		_node.Content = value
 	}
 	if value, ok := pc.mutation.LocationX(); ok {
 		_spec.SetField(post.FieldLocationX, field.TypeFloat64, value)
@@ -247,10 +251,10 @@ func (pc *PostCreate) createSpec() (*Post, *sqlgraph.CreateSpec) {
 	}
 	if nodes := pc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
 			Table:   post.UserTable,
-			Columns: post.UserPrimaryKey,
+			Columns: []string{post.UserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -259,14 +263,15 @@ func (pc *PostCreate) createSpec() (*Post, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.UserID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := pc.mutation.EventIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
 			Table:   post.EventTable,
-			Columns: post.EventPrimaryKey,
+			Columns: []string{post.EventColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -275,12 +280,13 @@ func (pc *PostCreate) createSpec() (*Post, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.EventID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := pc.mutation.ImagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   post.ImagesTable,
 			Columns: []string{post.ImagesColumn},
 			Bidi:    false,

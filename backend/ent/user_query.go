@@ -22,13 +22,13 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx             *QueryContext
-	order           []user.OrderOption
-	inters          []Interceptor
-	predicates      []predicate.User
-	withPosts       *PostQuery
-	withEvents      *EventQuery
-	withEventAdmins *EventAdminQuery
+	ctx               *QueryContext
+	order             []user.OrderOption
+	inters            []Interceptor
+	predicates        []predicate.User
+	withPosts         *PostQuery
+	withCreatedEvents *EventQuery
+	withEventAdmins   *EventAdminQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -79,7 +79,7 @@ func (uq *UserQuery) QueryPosts() *PostQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, user.PostsTable, user.PostsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.PostsTable, user.PostsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -87,8 +87,8 @@ func (uq *UserQuery) QueryPosts() *PostQuery {
 	return query
 }
 
-// QueryEvents chains the current query on the "events" edge.
-func (uq *UserQuery) QueryEvents() *EventQuery {
+// QueryCreatedEvents chains the current query on the "created_events" edge.
+func (uq *UserQuery) QueryCreatedEvents() *EventQuery {
 	query := (&EventClient{config: uq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := uq.prepareQuery(ctx); err != nil {
@@ -101,7 +101,7 @@ func (uq *UserQuery) QueryEvents() *EventQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(event.Table, event.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.EventsTable, user.EventsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.CreatedEventsTable, user.CreatedEventsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -123,7 +123,7 @@ func (uq *UserQuery) QueryEventAdmins() *EventAdminQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(eventadmin.Table, eventadmin.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.EventAdminsTable, user.EventAdminsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.EventAdminsTable, user.EventAdminsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -318,14 +318,14 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:          uq.config,
-		ctx:             uq.ctx.Clone(),
-		order:           append([]user.OrderOption{}, uq.order...),
-		inters:          append([]Interceptor{}, uq.inters...),
-		predicates:      append([]predicate.User{}, uq.predicates...),
-		withPosts:       uq.withPosts.Clone(),
-		withEvents:      uq.withEvents.Clone(),
-		withEventAdmins: uq.withEventAdmins.Clone(),
+		config:            uq.config,
+		ctx:               uq.ctx.Clone(),
+		order:             append([]user.OrderOption{}, uq.order...),
+		inters:            append([]Interceptor{}, uq.inters...),
+		predicates:        append([]predicate.User{}, uq.predicates...),
+		withPosts:         uq.withPosts.Clone(),
+		withCreatedEvents: uq.withCreatedEvents.Clone(),
+		withEventAdmins:   uq.withEventAdmins.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -343,14 +343,14 @@ func (uq *UserQuery) WithPosts(opts ...func(*PostQuery)) *UserQuery {
 	return uq
 }
 
-// WithEvents tells the query-builder to eager-load the nodes that are connected to
-// the "events" edge. The optional arguments are used to configure the query builder of the edge.
-func (uq *UserQuery) WithEvents(opts ...func(*EventQuery)) *UserQuery {
+// WithCreatedEvents tells the query-builder to eager-load the nodes that are connected to
+// the "created_events" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithCreatedEvents(opts ...func(*EventQuery)) *UserQuery {
 	query := (&EventClient{config: uq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	uq.withEvents = query
+	uq.withCreatedEvents = query
 	return uq
 }
 
@@ -445,7 +445,7 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		_spec       = uq.querySpec()
 		loadedTypes = [3]bool{
 			uq.withPosts != nil,
-			uq.withEvents != nil,
+			uq.withCreatedEvents != nil,
 			uq.withEventAdmins != nil,
 		}
 	)
@@ -474,10 +474,10 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
-	if query := uq.withEvents; query != nil {
-		if err := uq.loadEvents(ctx, query, nodes,
-			func(n *User) { n.Edges.Events = []*Event{} },
-			func(n *User, e *Event) { n.Edges.Events = append(n.Edges.Events, e) }); err != nil {
+	if query := uq.withCreatedEvents; query != nil {
+		if err := uq.loadCreatedEvents(ctx, query, nodes,
+			func(n *User) { n.Edges.CreatedEvents = []*Event{} },
+			func(n *User, e *Event) { n.Edges.CreatedEvents = append(n.Edges.CreatedEvents, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -492,67 +492,6 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 }
 
 func (uq *UserQuery) loadPosts(ctx context.Context, query *PostQuery, nodes []*User, init func(*User), assign func(*User, *Post)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*User)
-	nids := make(map[int]map[*User]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(user.PostsTable)
-		s.Join(joinT).On(s.C(post.FieldID), joinT.C(user.PostsPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(user.PostsPrimaryKey[0]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(user.PostsPrimaryKey[0]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Post](ctx, query, qr, query.inters)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "posts" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
-		}
-	}
-	return nil
-}
-func (uq *UserQuery) loadEvents(ctx context.Context, query *EventQuery, nodes []*User, init func(*User), assign func(*User, *Event)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*User)
 	for i := range nodes {
@@ -562,22 +501,51 @@ func (uq *UserQuery) loadEvents(ctx context.Context, query *EventQuery, nodes []
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
-	query.Where(predicate.Event(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(user.EventsColumn), fks...))
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(post.FieldUserID)
+	}
+	query.Where(predicate.Post(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.PostsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.user_events
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "user_events" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.UserID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_events" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadCreatedEvents(ctx context.Context, query *EventQuery, nodes []*User, init func(*User), assign func(*User, *Event)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(event.FieldCreatorID)
+	}
+	query.Where(predicate.Event(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.CreatedEventsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.CreatorID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "creator_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -593,7 +561,9 @@ func (uq *UserQuery) loadEventAdmins(ctx context.Context, query *EventAdminQuery
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(eventadmin.FieldUserID)
+	}
 	query.Where(predicate.EventAdmin(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(user.EventAdminsColumn), fks...))
 	}))
@@ -602,13 +572,10 @@ func (uq *UserQuery) loadEventAdmins(ctx context.Context, query *EventAdminQuery
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.user_event_admins
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "user_event_admins" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.UserID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_event_admins" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

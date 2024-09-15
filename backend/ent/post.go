@@ -9,7 +9,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/event"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/post"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/user"
 )
 
 // Post is the model entity for the Post schema.
@@ -17,8 +19,12 @@ type Post struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// Comment holds the value of the "comment" field.
-	Comment string `json:"comment,omitempty"`
+	// UserID holds the value of the "user_id" field.
+	UserID int `json:"user_id,omitempty"`
+	// EventID holds the value of the "event_id" field.
+	EventID int `json:"event_id,omitempty"`
+	// Content holds the value of the "content" field.
+	Content string `json:"content,omitempty"`
 	// LocationX holds the value of the "location_x" field.
 	LocationX float64 `json:"location_x,omitempty"`
 	// LocationY holds the value of the "location_y" field.
@@ -38,9 +44,9 @@ type Post struct {
 // PostEdges holds the relations/edges for other nodes in the graph.
 type PostEdges struct {
 	// User holds the value of the user edge.
-	User []*User `json:"user,omitempty"`
+	User *User `json:"user,omitempty"`
 	// Event holds the value of the event edge.
-	Event []*Event `json:"event,omitempty"`
+	Event *Event `json:"event,omitempty"`
 	// Images holds the value of the images edge.
 	Images []*PostImage `json:"images,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -49,19 +55,23 @@ type PostEdges struct {
 }
 
 // UserOrErr returns the User value or an error if the edge
-// was not loaded in eager-loading.
-func (e PostEdges) UserOrErr() ([]*User, error) {
-	if e.loadedTypes[0] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e PostEdges) UserOrErr() (*User, error) {
+	if e.User != nil {
 		return e.User, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: user.Label}
 	}
 	return nil, &NotLoadedError{edge: "user"}
 }
 
 // EventOrErr returns the Event value or an error if the edge
-// was not loaded in eager-loading.
-func (e PostEdges) EventOrErr() ([]*Event, error) {
-	if e.loadedTypes[1] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e PostEdges) EventOrErr() (*Event, error) {
+	if e.Event != nil {
 		return e.Event, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: event.Label}
 	}
 	return nil, &NotLoadedError{edge: "event"}
 }
@@ -82,9 +92,9 @@ func (*Post) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case post.FieldLocationX, post.FieldLocationY:
 			values[i] = new(sql.NullFloat64)
-		case post.FieldID:
+		case post.FieldID, post.FieldUserID, post.FieldEventID:
 			values[i] = new(sql.NullInt64)
-		case post.FieldComment, post.FieldVideoURL:
+		case post.FieldContent, post.FieldVideoURL:
 			values[i] = new(sql.NullString)
 		case post.FieldCreatedAt, post.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -109,11 +119,23 @@ func (po *Post) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			po.ID = int(value.Int64)
-		case post.FieldComment:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field comment", values[i])
+		case post.FieldUserID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
-				po.Comment = value.String
+				po.UserID = int(value.Int64)
+			}
+		case post.FieldEventID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field event_id", values[i])
+			} else if value.Valid {
+				po.EventID = int(value.Int64)
+			}
+		case post.FieldContent:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field content", values[i])
+			} else if value.Valid {
+				po.Content = value.String
 			}
 		case post.FieldLocationX:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
@@ -196,8 +218,14 @@ func (po *Post) String() string {
 	var builder strings.Builder
 	builder.WriteString("Post(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", po.ID))
-	builder.WriteString("comment=")
-	builder.WriteString(po.Comment)
+	builder.WriteString("user_id=")
+	builder.WriteString(fmt.Sprintf("%v", po.UserID))
+	builder.WriteString(", ")
+	builder.WriteString("event_id=")
+	builder.WriteString(fmt.Sprintf("%v", po.EventID))
+	builder.WriteString(", ")
+	builder.WriteString("content=")
+	builder.WriteString(po.Content)
 	builder.WriteString(", ")
 	builder.WriteString("location_x=")
 	builder.WriteString(fmt.Sprintf("%v", po.LocationX))

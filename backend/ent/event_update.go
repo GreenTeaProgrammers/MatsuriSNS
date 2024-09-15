@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -98,38 +99,57 @@ func (eu *EventUpdate) ClearQrCodeURL() *EventUpdate {
 	return eu
 }
 
-// SetCreatedByID sets the "created_by" edge to the User entity by ID.
-func (eu *EventUpdate) SetCreatedByID(id int) *EventUpdate {
-	eu.mutation.SetCreatedByID(id)
+// SetStartTime sets the "start_time" field.
+func (eu *EventUpdate) SetStartTime(t time.Time) *EventUpdate {
+	eu.mutation.SetStartTime(t)
 	return eu
 }
 
-// SetNillableCreatedByID sets the "created_by" edge to the User entity by ID if the given value is not nil.
-func (eu *EventUpdate) SetNillableCreatedByID(id *int) *EventUpdate {
-	if id != nil {
-		eu = eu.SetCreatedByID(*id)
+// SetNillableStartTime sets the "start_time" field if the given value is not nil.
+func (eu *EventUpdate) SetNillableStartTime(t *time.Time) *EventUpdate {
+	if t != nil {
+		eu.SetStartTime(*t)
 	}
 	return eu
 }
 
-// SetCreatedBy sets the "created_by" edge to the User entity.
-func (eu *EventUpdate) SetCreatedBy(u *User) *EventUpdate {
-	return eu.SetCreatedByID(u.ID)
-}
-
-// AddPostIDs adds the "posts" edge to the Post entity by IDs.
-func (eu *EventUpdate) AddPostIDs(ids ...int) *EventUpdate {
-	eu.mutation.AddPostIDs(ids...)
+// SetEndTime sets the "end_time" field.
+func (eu *EventUpdate) SetEndTime(t time.Time) *EventUpdate {
+	eu.mutation.SetEndTime(t)
 	return eu
 }
 
-// AddPosts adds the "posts" edges to the Post entity.
-func (eu *EventUpdate) AddPosts(p ...*Post) *EventUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// SetNillableEndTime sets the "end_time" field if the given value is not nil.
+func (eu *EventUpdate) SetNillableEndTime(t *time.Time) *EventUpdate {
+	if t != nil {
+		eu.SetEndTime(*t)
 	}
-	return eu.AddPostIDs(ids...)
+	return eu
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (eu *EventUpdate) SetUpdatedAt(t time.Time) *EventUpdate {
+	eu.mutation.SetUpdatedAt(t)
+	return eu
+}
+
+// SetCreatorID sets the "creator_id" field.
+func (eu *EventUpdate) SetCreatorID(i int) *EventUpdate {
+	eu.mutation.SetCreatorID(i)
+	return eu
+}
+
+// SetNillableCreatorID sets the "creator_id" field if the given value is not nil.
+func (eu *EventUpdate) SetNillableCreatorID(i *int) *EventUpdate {
+	if i != nil {
+		eu.SetCreatorID(*i)
+	}
+	return eu
+}
+
+// SetCreator sets the "creator" edge to the User entity.
+func (eu *EventUpdate) SetCreator(u *User) *EventUpdate {
+	return eu.SetCreatorID(u.ID)
 }
 
 // AddEventAdminIDs adds the "event_admins" edge to the EventAdmin entity by IDs.
@@ -147,36 +167,30 @@ func (eu *EventUpdate) AddEventAdmins(e ...*EventAdmin) *EventUpdate {
 	return eu.AddEventAdminIDs(ids...)
 }
 
+// AddPostIDs adds the "posts" edge to the Post entity by IDs.
+func (eu *EventUpdate) AddPostIDs(ids ...int) *EventUpdate {
+	eu.mutation.AddPostIDs(ids...)
+	return eu
+}
+
+// AddPosts adds the "posts" edges to the Post entity.
+func (eu *EventUpdate) AddPosts(p ...*Post) *EventUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return eu.AddPostIDs(ids...)
+}
+
 // Mutation returns the EventMutation object of the builder.
 func (eu *EventUpdate) Mutation() *EventMutation {
 	return eu.mutation
 }
 
-// ClearCreatedBy clears the "created_by" edge to the User entity.
-func (eu *EventUpdate) ClearCreatedBy() *EventUpdate {
-	eu.mutation.ClearCreatedBy()
+// ClearCreator clears the "creator" edge to the User entity.
+func (eu *EventUpdate) ClearCreator() *EventUpdate {
+	eu.mutation.ClearCreator()
 	return eu
-}
-
-// ClearPosts clears all "posts" edges to the Post entity.
-func (eu *EventUpdate) ClearPosts() *EventUpdate {
-	eu.mutation.ClearPosts()
-	return eu
-}
-
-// RemovePostIDs removes the "posts" edge to Post entities by IDs.
-func (eu *EventUpdate) RemovePostIDs(ids ...int) *EventUpdate {
-	eu.mutation.RemovePostIDs(ids...)
-	return eu
-}
-
-// RemovePosts removes "posts" edges to Post entities.
-func (eu *EventUpdate) RemovePosts(p ...*Post) *EventUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return eu.RemovePostIDs(ids...)
 }
 
 // ClearEventAdmins clears all "event_admins" edges to the EventAdmin entity.
@@ -200,8 +214,30 @@ func (eu *EventUpdate) RemoveEventAdmins(e ...*EventAdmin) *EventUpdate {
 	return eu.RemoveEventAdminIDs(ids...)
 }
 
+// ClearPosts clears all "posts" edges to the Post entity.
+func (eu *EventUpdate) ClearPosts() *EventUpdate {
+	eu.mutation.ClearPosts()
+	return eu
+}
+
+// RemovePostIDs removes the "posts" edge to Post entities by IDs.
+func (eu *EventUpdate) RemovePostIDs(ids ...int) *EventUpdate {
+	eu.mutation.RemovePostIDs(ids...)
+	return eu
+}
+
+// RemovePosts removes "posts" edges to Post entities.
+func (eu *EventUpdate) RemovePosts(p ...*Post) *EventUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return eu.RemovePostIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (eu *EventUpdate) Save(ctx context.Context) (int, error) {
+	eu.defaults()
 	return withHooks(ctx, eu.sqlSave, eu.mutation, eu.hooks)
 }
 
@@ -227,6 +263,14 @@ func (eu *EventUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (eu *EventUpdate) defaults() {
+	if _, ok := eu.mutation.UpdatedAt(); !ok {
+		v := event.UpdateDefaultUpdatedAt()
+		eu.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (eu *EventUpdate) check() error {
 	if v, ok := eu.mutation.Title(); ok {
@@ -238,6 +282,9 @@ func (eu *EventUpdate) check() error {
 		if err := event.MapURLValidator(v); err != nil {
 			return &ValidationError{Name: "map_url", err: fmt.Errorf(`ent: validator failed for field "Event.map_url": %w`, err)}
 		}
+	}
+	if eu.mutation.CreatorCleared() && len(eu.mutation.CreatorIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Event.creator"`)
 	}
 	return nil
 }
@@ -272,12 +319,21 @@ func (eu *EventUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if eu.mutation.QrCodeURLCleared() {
 		_spec.ClearField(event.FieldQrCodeURL, field.TypeString)
 	}
-	if eu.mutation.CreatedByCleared() {
+	if value, ok := eu.mutation.StartTime(); ok {
+		_spec.SetField(event.FieldStartTime, field.TypeTime, value)
+	}
+	if value, ok := eu.mutation.EndTime(); ok {
+		_spec.SetField(event.FieldEndTime, field.TypeTime, value)
+	}
+	if value, ok := eu.mutation.UpdatedAt(); ok {
+		_spec.SetField(event.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if eu.mutation.CreatorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   event.CreatedByTable,
-			Columns: []string{event.CreatedByColumn},
+			Inverse: false,
+			Table:   event.CreatorTable,
+			Columns: []string{event.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -285,60 +341,15 @@ func (eu *EventUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := eu.mutation.CreatedByIDs(); len(nodes) > 0 {
+	if nodes := eu.mutation.CreatorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   event.CreatedByTable,
-			Columns: []string{event.CreatedByColumn},
+			Inverse: false,
+			Table:   event.CreatorTable,
+			Columns: []string{event.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if eu.mutation.PostsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   event.PostsTable,
-			Columns: event.PostsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := eu.mutation.RemovedPostsIDs(); len(nodes) > 0 && !eu.mutation.PostsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   event.PostsTable,
-			Columns: event.PostsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := eu.mutation.PostsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   event.PostsTable,
-			Columns: event.PostsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -349,7 +360,7 @@ func (eu *EventUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if eu.mutation.EventAdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   event.EventAdminsTable,
 			Columns: []string{event.EventAdminsColumn},
 			Bidi:    false,
@@ -362,7 +373,7 @@ func (eu *EventUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := eu.mutation.RemovedEventAdminsIDs(); len(nodes) > 0 && !eu.mutation.EventAdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   event.EventAdminsTable,
 			Columns: []string{event.EventAdminsColumn},
 			Bidi:    false,
@@ -378,12 +389,57 @@ func (eu *EventUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := eu.mutation.EventAdminsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   event.EventAdminsTable,
 			Columns: []string{event.EventAdminsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if eu.mutation.PostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   event.PostsTable,
+			Columns: []string{event.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := eu.mutation.RemovedPostsIDs(); len(nodes) > 0 && !eu.mutation.PostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   event.PostsTable,
+			Columns: []string{event.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := eu.mutation.PostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   event.PostsTable,
+			Columns: []string{event.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -479,38 +535,57 @@ func (euo *EventUpdateOne) ClearQrCodeURL() *EventUpdateOne {
 	return euo
 }
 
-// SetCreatedByID sets the "created_by" edge to the User entity by ID.
-func (euo *EventUpdateOne) SetCreatedByID(id int) *EventUpdateOne {
-	euo.mutation.SetCreatedByID(id)
+// SetStartTime sets the "start_time" field.
+func (euo *EventUpdateOne) SetStartTime(t time.Time) *EventUpdateOne {
+	euo.mutation.SetStartTime(t)
 	return euo
 }
 
-// SetNillableCreatedByID sets the "created_by" edge to the User entity by ID if the given value is not nil.
-func (euo *EventUpdateOne) SetNillableCreatedByID(id *int) *EventUpdateOne {
-	if id != nil {
-		euo = euo.SetCreatedByID(*id)
+// SetNillableStartTime sets the "start_time" field if the given value is not nil.
+func (euo *EventUpdateOne) SetNillableStartTime(t *time.Time) *EventUpdateOne {
+	if t != nil {
+		euo.SetStartTime(*t)
 	}
 	return euo
 }
 
-// SetCreatedBy sets the "created_by" edge to the User entity.
-func (euo *EventUpdateOne) SetCreatedBy(u *User) *EventUpdateOne {
-	return euo.SetCreatedByID(u.ID)
-}
-
-// AddPostIDs adds the "posts" edge to the Post entity by IDs.
-func (euo *EventUpdateOne) AddPostIDs(ids ...int) *EventUpdateOne {
-	euo.mutation.AddPostIDs(ids...)
+// SetEndTime sets the "end_time" field.
+func (euo *EventUpdateOne) SetEndTime(t time.Time) *EventUpdateOne {
+	euo.mutation.SetEndTime(t)
 	return euo
 }
 
-// AddPosts adds the "posts" edges to the Post entity.
-func (euo *EventUpdateOne) AddPosts(p ...*Post) *EventUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// SetNillableEndTime sets the "end_time" field if the given value is not nil.
+func (euo *EventUpdateOne) SetNillableEndTime(t *time.Time) *EventUpdateOne {
+	if t != nil {
+		euo.SetEndTime(*t)
 	}
-	return euo.AddPostIDs(ids...)
+	return euo
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (euo *EventUpdateOne) SetUpdatedAt(t time.Time) *EventUpdateOne {
+	euo.mutation.SetUpdatedAt(t)
+	return euo
+}
+
+// SetCreatorID sets the "creator_id" field.
+func (euo *EventUpdateOne) SetCreatorID(i int) *EventUpdateOne {
+	euo.mutation.SetCreatorID(i)
+	return euo
+}
+
+// SetNillableCreatorID sets the "creator_id" field if the given value is not nil.
+func (euo *EventUpdateOne) SetNillableCreatorID(i *int) *EventUpdateOne {
+	if i != nil {
+		euo.SetCreatorID(*i)
+	}
+	return euo
+}
+
+// SetCreator sets the "creator" edge to the User entity.
+func (euo *EventUpdateOne) SetCreator(u *User) *EventUpdateOne {
+	return euo.SetCreatorID(u.ID)
 }
 
 // AddEventAdminIDs adds the "event_admins" edge to the EventAdmin entity by IDs.
@@ -528,36 +603,30 @@ func (euo *EventUpdateOne) AddEventAdmins(e ...*EventAdmin) *EventUpdateOne {
 	return euo.AddEventAdminIDs(ids...)
 }
 
+// AddPostIDs adds the "posts" edge to the Post entity by IDs.
+func (euo *EventUpdateOne) AddPostIDs(ids ...int) *EventUpdateOne {
+	euo.mutation.AddPostIDs(ids...)
+	return euo
+}
+
+// AddPosts adds the "posts" edges to the Post entity.
+func (euo *EventUpdateOne) AddPosts(p ...*Post) *EventUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return euo.AddPostIDs(ids...)
+}
+
 // Mutation returns the EventMutation object of the builder.
 func (euo *EventUpdateOne) Mutation() *EventMutation {
 	return euo.mutation
 }
 
-// ClearCreatedBy clears the "created_by" edge to the User entity.
-func (euo *EventUpdateOne) ClearCreatedBy() *EventUpdateOne {
-	euo.mutation.ClearCreatedBy()
+// ClearCreator clears the "creator" edge to the User entity.
+func (euo *EventUpdateOne) ClearCreator() *EventUpdateOne {
+	euo.mutation.ClearCreator()
 	return euo
-}
-
-// ClearPosts clears all "posts" edges to the Post entity.
-func (euo *EventUpdateOne) ClearPosts() *EventUpdateOne {
-	euo.mutation.ClearPosts()
-	return euo
-}
-
-// RemovePostIDs removes the "posts" edge to Post entities by IDs.
-func (euo *EventUpdateOne) RemovePostIDs(ids ...int) *EventUpdateOne {
-	euo.mutation.RemovePostIDs(ids...)
-	return euo
-}
-
-// RemovePosts removes "posts" edges to Post entities.
-func (euo *EventUpdateOne) RemovePosts(p ...*Post) *EventUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return euo.RemovePostIDs(ids...)
 }
 
 // ClearEventAdmins clears all "event_admins" edges to the EventAdmin entity.
@@ -581,6 +650,27 @@ func (euo *EventUpdateOne) RemoveEventAdmins(e ...*EventAdmin) *EventUpdateOne {
 	return euo.RemoveEventAdminIDs(ids...)
 }
 
+// ClearPosts clears all "posts" edges to the Post entity.
+func (euo *EventUpdateOne) ClearPosts() *EventUpdateOne {
+	euo.mutation.ClearPosts()
+	return euo
+}
+
+// RemovePostIDs removes the "posts" edge to Post entities by IDs.
+func (euo *EventUpdateOne) RemovePostIDs(ids ...int) *EventUpdateOne {
+	euo.mutation.RemovePostIDs(ids...)
+	return euo
+}
+
+// RemovePosts removes "posts" edges to Post entities.
+func (euo *EventUpdateOne) RemovePosts(p ...*Post) *EventUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return euo.RemovePostIDs(ids...)
+}
+
 // Where appends a list predicates to the EventUpdate builder.
 func (euo *EventUpdateOne) Where(ps ...predicate.Event) *EventUpdateOne {
 	euo.mutation.Where(ps...)
@@ -596,6 +686,7 @@ func (euo *EventUpdateOne) Select(field string, fields ...string) *EventUpdateOn
 
 // Save executes the query and returns the updated Event entity.
 func (euo *EventUpdateOne) Save(ctx context.Context) (*Event, error) {
+	euo.defaults()
 	return withHooks(ctx, euo.sqlSave, euo.mutation, euo.hooks)
 }
 
@@ -621,6 +712,14 @@ func (euo *EventUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (euo *EventUpdateOne) defaults() {
+	if _, ok := euo.mutation.UpdatedAt(); !ok {
+		v := event.UpdateDefaultUpdatedAt()
+		euo.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (euo *EventUpdateOne) check() error {
 	if v, ok := euo.mutation.Title(); ok {
@@ -632,6 +731,9 @@ func (euo *EventUpdateOne) check() error {
 		if err := event.MapURLValidator(v); err != nil {
 			return &ValidationError{Name: "map_url", err: fmt.Errorf(`ent: validator failed for field "Event.map_url": %w`, err)}
 		}
+	}
+	if euo.mutation.CreatorCleared() && len(euo.mutation.CreatorIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Event.creator"`)
 	}
 	return nil
 }
@@ -683,12 +785,21 @@ func (euo *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error
 	if euo.mutation.QrCodeURLCleared() {
 		_spec.ClearField(event.FieldQrCodeURL, field.TypeString)
 	}
-	if euo.mutation.CreatedByCleared() {
+	if value, ok := euo.mutation.StartTime(); ok {
+		_spec.SetField(event.FieldStartTime, field.TypeTime, value)
+	}
+	if value, ok := euo.mutation.EndTime(); ok {
+		_spec.SetField(event.FieldEndTime, field.TypeTime, value)
+	}
+	if value, ok := euo.mutation.UpdatedAt(); ok {
+		_spec.SetField(event.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if euo.mutation.CreatorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   event.CreatedByTable,
-			Columns: []string{event.CreatedByColumn},
+			Inverse: false,
+			Table:   event.CreatorTable,
+			Columns: []string{event.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -696,60 +807,15 @@ func (euo *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := euo.mutation.CreatedByIDs(); len(nodes) > 0 {
+	if nodes := euo.mutation.CreatorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   event.CreatedByTable,
-			Columns: []string{event.CreatedByColumn},
+			Inverse: false,
+			Table:   event.CreatorTable,
+			Columns: []string{event.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if euo.mutation.PostsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   event.PostsTable,
-			Columns: event.PostsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := euo.mutation.RemovedPostsIDs(); len(nodes) > 0 && !euo.mutation.PostsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   event.PostsTable,
-			Columns: event.PostsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := euo.mutation.PostsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   event.PostsTable,
-			Columns: event.PostsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -760,7 +826,7 @@ func (euo *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error
 	if euo.mutation.EventAdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   event.EventAdminsTable,
 			Columns: []string{event.EventAdminsColumn},
 			Bidi:    false,
@@ -773,7 +839,7 @@ func (euo *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error
 	if nodes := euo.mutation.RemovedEventAdminsIDs(); len(nodes) > 0 && !euo.mutation.EventAdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   event.EventAdminsTable,
 			Columns: []string{event.EventAdminsColumn},
 			Bidi:    false,
@@ -789,12 +855,57 @@ func (euo *EventUpdateOne) sqlSave(ctx context.Context) (_node *Event, err error
 	if nodes := euo.mutation.EventAdminsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   event.EventAdminsTable,
 			Columns: []string{event.EventAdminsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(eventadmin.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if euo.mutation.PostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   event.PostsTable,
+			Columns: []string{event.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := euo.mutation.RemovedPostsIDs(); len(nodes) > 0 && !euo.mutation.PostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   event.PostsTable,
+			Columns: []string{event.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := euo.mutation.PostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   event.PostsTable,
+			Columns: []string{event.PostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(post.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
