@@ -45,7 +45,7 @@ func (ac *AuthController) Register(c *gin.Context) {
 		Create().
 		SetUsername(input.Username).
 		SetEmail(input.Email).
-		SetPassword(hashedPassword).
+		SetHashedPassword(hashedPassword). // Use SetHashedPassword instead of SetPassword
 		Save(context.Background())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
@@ -79,7 +79,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 	}
 
 	// Check if the password matches
-	if err := utils.CheckPassword(user.Password, input.Password); err != nil {
+	if err := utils.CheckPassword(user.HashedPassword, input.Password); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
@@ -87,4 +87,3 @@ func (ac *AuthController) Login(c *gin.Context) {
 	// Success
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "user": user})
 }
-
