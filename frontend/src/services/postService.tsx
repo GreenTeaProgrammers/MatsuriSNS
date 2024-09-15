@@ -1,7 +1,7 @@
 import api from "./api";
 
 // Define the types for the Post data
-interface CreatePostRequest {
+export interface CreatePostRequest {
   user_id: number;
   event_id: number;
   content: string;
@@ -10,7 +10,7 @@ interface CreatePostRequest {
   video_url?: string;
 }
 
-interface Post {
+export interface Post {
   id: number;
   user_id: number;
   event_id: number;
