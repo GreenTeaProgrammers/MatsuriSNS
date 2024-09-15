@@ -4,7 +4,6 @@ import api from '../services/api';
 
 interface AuthState {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
@@ -12,7 +11,6 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-  token: null,
   isAuthenticated: false,
   status: 'idle',
   error: null,
@@ -23,11 +21,7 @@ export const login = createAsyncThunk(
   'auth/login',
   async (input: LoginInput, { rejectWithValue }) => {
     try {
-      const response = await api.post<{ token: string; username: string; message: string }>(
-        '/login',
-        input
-      );
-      localStorage.setItem('token', response.data.token);
+      const response = await api.post<User>('/login', input);
       localStorage.setItem('username', response.data.username);
       return response.data;
     } catch (error) {
@@ -50,7 +44,6 @@ export const register = createAsyncThunk(
 
 export const logout = createAsyncThunk('auth/logout', async () => {
   await api.post('/logout');
-  localStorage.removeItem('token');
   localStorage.removeItem('username');
 });
 
@@ -77,14 +70,7 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.user = {
-          id: 0,
-          username: action.payload.username,
-          email: '',
-          created_at: new Date(),
-          avatar_url: '',
-        };
-        state.token = action.payload.token;
+        state.user = action.payload;
         state.isAuthenticated = true;
       })
       .addCase(login.rejected, (state, action) => {
@@ -105,7 +91,6 @@ const authSlice = createSlice({
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
-        state.token = null;
         state.isAuthenticated = false;
       })
       .addCase(getProfileByUsername.pending, (state) => {
