@@ -1,0 +1,33 @@
+.register-event-form {
+  display: flex;
+  flex-direction: column; 
+  gap: 10px; 
+  width: 300px; 
+  margin: 0 auto; 
+}
+
+.register-event-form label {
+  font-weight: bold;
+  margin-bottom: 4px;
+  text-align: left;
+}
+
+.register-event-form input,
+.register-event-form button {
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.register-event-form button {
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  border: none;
+  margin-top: 10px; 
+}
+
+.register-event-form button:hover {
+  background-color: #0056b3; 
+}
