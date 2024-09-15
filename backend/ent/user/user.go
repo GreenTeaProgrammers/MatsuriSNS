@@ -16,8 +16,6 @@ const (
 	FieldID = "id"
 	// FieldUsername holds the string denoting the username field in the database.
 	FieldUsername = "username"
-	// FieldEmail holds the string denoting the email field in the database.
-	FieldEmail = "email"
 	// FieldHashedPassword holds the string denoting the hashed_password field in the database.
 	FieldHashedPassword = "hashed_password"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -59,7 +57,6 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldUsername,
-	FieldEmail,
 	FieldHashedPassword,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -78,8 +75,6 @@ func ValidColumn(column string) bool {
 var (
 	// UsernameValidator is a validator for the "username" field. It is called by the builders before save.
 	UsernameValidator func(string) error
-	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
-	EmailValidator func(string) error
 	// HashedPasswordValidator is a validator for the "hashed_password" field. It is called by the builders before save.
 	HashedPasswordValidator func(string) error
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -101,11 +96,6 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByUsername orders the results by the username field.
 func ByUsername(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUsername, opts...).ToFunc()
-}
-
-// ByEmail orders the results by the email field.
-func ByEmail(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldEmail, opts...).ToFunc()
 }
 
 // ByHashedPassword orders the results by the hashed_password field.

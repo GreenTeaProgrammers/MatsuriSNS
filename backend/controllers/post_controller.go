@@ -38,19 +38,36 @@ func (pc *PostController) CreatePost(c *gin.Context) {
 		return
 	}
 
+	ctx := context.Background()
+
+	// Verify that the User exists
+	_, err := pc.client.User.Get(ctx, input.UserID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Verify that the Event exists
+	_, err = pc.client.Event.Get(ctx, input.EventID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Event not found"})
+		return
+	}
+
 	// Create the post in the database
 	post, err := pc.client.Post.Create().
 		SetUserID(input.UserID).
+		SetEventID(input.EventID).
 		SetContent(input.Content).
 		SetLocationX(input.LocationX).
 		SetLocationY(input.LocationY).
 		SetNillableVideoURL(&input.VideoURL).
 		SetCreatedAt(time.Now()).
 		SetUpdatedAt(time.Now()).
-		Save(context.Background())
+		Save(ctx)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
