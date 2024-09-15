@@ -24,7 +24,6 @@ const MapPage: React.FC = () => {
       try {
         const data = await getAllPosts();
         setPosts(data);
-        setLoading(false);
 
         // Set initial slider value to the latest post's time
         if (data.length > 0) {
@@ -32,6 +31,8 @@ const MapPage: React.FC = () => {
           const maxTime = Math.max(...times);
           setSliderValue(maxTime);
         }
+
+        setLoading(false);
       } catch (error) {
         setError((error as Error).message);
         setLoading(false);
