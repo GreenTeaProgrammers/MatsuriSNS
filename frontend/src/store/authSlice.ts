@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { User, LoginInput, RegisterInput } from '../../types/user';
 import api from '../services/api';
+import axios from 'axios'; // axiosをインポートしてエラーハンドリングを改善します
 
 interface AuthState {
   user: User | null;
@@ -25,7 +26,10 @@ export const login = createAsyncThunk(
       localStorage.setItem('username', response.data.username);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'Login failed');
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(error.response?.data || 'Login failed');
+      }
+      return rejectWithValue('Login failed');
     }
   }
 );
@@ -37,7 +41,10 @@ export const register = createAsyncThunk(
       const response = await api.post<User>('/register', input);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'Registration failed');
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(error.response?.data || 'Registration failed');
+      }
+      return rejectWithValue('Registration failed');
     }
   }
 );
@@ -54,7 +61,10 @@ export const getProfileByUsername = createAsyncThunk(
       const response = await api.get<User>(`/profile/${username}`);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'Failed to fetch profile');
+      if (axios.isAxiosError(error)) {
+        return rejectWithValue(error.response?.data || 'Failed to fetch profile');
+      }
+      return rejectWithValue('Failed to fetch profile');
     }
   }
 );
