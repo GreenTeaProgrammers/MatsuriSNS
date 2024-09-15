@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "../store";
 import { Button, Typography, Container, Avatar } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { login } from "../store/authSlice"; // Reduxのloginアクションをインポート
@@ -21,7 +22,7 @@ const LoginPage: React.FC = () => {
 
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch : AppDispatch = useDispatch();
   const authStatus = useSelector((state: RootState) => state.auth.status);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
