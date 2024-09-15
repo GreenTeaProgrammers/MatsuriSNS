@@ -23,12 +23,6 @@ type UserCreate struct {
 	hooks    []Hook
 }
 
-// SetUserID sets the "user_id" field.
-func (uc *UserCreate) SetUserID(i int) *UserCreate {
-	uc.mutation.SetUserID(i)
-	return uc
-}
-
 // SetUsername sets the "username" field.
 func (uc *UserCreate) SetUsername(s string) *UserCreate {
 	uc.mutation.SetUsername(s)
@@ -90,19 +84,19 @@ func (uc *UserCreate) AddPosts(p ...*Post) *UserCreate {
 	return uc.AddPostIDs(ids...)
 }
 
-// AddEventIDs adds the "events" edge to the Event entity by IDs.
-func (uc *UserCreate) AddEventIDs(ids ...int) *UserCreate {
-	uc.mutation.AddEventIDs(ids...)
+// AddCreatedEventIDs adds the "created_events" edge to the Event entity by IDs.
+func (uc *UserCreate) AddCreatedEventIDs(ids ...int) *UserCreate {
+	uc.mutation.AddCreatedEventIDs(ids...)
 	return uc
 }
 
-// AddEvents adds the "events" edges to the Event entity.
-func (uc *UserCreate) AddEvents(e ...*Event) *UserCreate {
+// AddCreatedEvents adds the "created_events" edges to the Event entity.
+func (uc *UserCreate) AddCreatedEvents(e ...*Event) *UserCreate {
 	ids := make([]int, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
 	}
-	return uc.AddEventIDs(ids...)
+	return uc.AddCreatedEventIDs(ids...)
 }
 
 // AddEventAdminIDs adds the "event_admins" edge to the EventAdmin entity by IDs.
@@ -167,9 +161,6 @@ func (uc *UserCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
-	if _, ok := uc.mutation.UserID(); !ok {
-		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "User.user_id"`)}
-	}
 	if _, ok := uc.mutation.Username(); !ok {
 		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "User.username"`)}
 	}
@@ -226,10 +217,6 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node = &User{config: uc.config}
 		_spec = sqlgraph.NewCreateSpec(user.Table, sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt))
 	)
-	if value, ok := uc.mutation.UserID(); ok {
-		_spec.SetField(user.FieldUserID, field.TypeInt, value)
-		_node.UserID = value
-	}
 	if value, ok := uc.mutation.Username(); ok {
 		_spec.SetField(user.FieldUsername, field.TypeString, value)
 		_node.Username = value
@@ -253,7 +240,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if nodes := uc.mutation.PostsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.PostsTable,
 			Columns: []string{user.PostsColumn},
 			Bidi:    false,
@@ -266,12 +253,12 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := uc.mutation.EventsIDs(); len(nodes) > 0 {
+	if nodes := uc.mutation.CreatedEventsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.EventsTable,
-			Columns: []string{user.EventsColumn},
+			Inverse: true,
+			Table:   user.CreatedEventsTable,
+			Columns: []string{user.CreatedEventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -285,7 +272,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if nodes := uc.mutation.EventAdminsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.EventAdminsTable,
 			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,

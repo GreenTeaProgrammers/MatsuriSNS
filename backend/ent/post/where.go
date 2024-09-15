@@ -60,6 +60,11 @@ func UserID(v int) predicate.Post {
 	return predicate.Post(sql.FieldEQ(FieldUserID, v))
 }
 
+// EventID applies equality check predicate on the "event_id" field. It's identical to EventIDEQ.
+func EventID(v int) predicate.Post {
+	return predicate.Post(sql.FieldEQ(FieldEventID, v))
+}
+
 // Content applies equality check predicate on the "content" field. It's identical to ContentEQ.
 func Content(v string) predicate.Post {
 	return predicate.Post(sql.FieldEQ(FieldContent, v))
@@ -108,6 +113,26 @@ func UserIDIn(vs ...int) predicate.Post {
 // UserIDNotIn applies the NotIn predicate on the "user_id" field.
 func UserIDNotIn(vs ...int) predicate.Post {
 	return predicate.Post(sql.FieldNotIn(FieldUserID, vs...))
+}
+
+// EventIDEQ applies the EQ predicate on the "event_id" field.
+func EventIDEQ(v int) predicate.Post {
+	return predicate.Post(sql.FieldEQ(FieldEventID, v))
+}
+
+// EventIDNEQ applies the NEQ predicate on the "event_id" field.
+func EventIDNEQ(v int) predicate.Post {
+	return predicate.Post(sql.FieldNEQ(FieldEventID, v))
+}
+
+// EventIDIn applies the In predicate on the "event_id" field.
+func EventIDIn(vs ...int) predicate.Post {
+	return predicate.Post(sql.FieldIn(FieldEventID, vs...))
+}
+
+// EventIDNotIn applies the NotIn predicate on the "event_id" field.
+func EventIDNotIn(vs ...int) predicate.Post {
+	return predicate.Post(sql.FieldNotIn(FieldEventID, vs...))
 }
 
 // ContentEQ applies the EQ predicate on the "content" field.
@@ -415,7 +440,7 @@ func HasUser() predicate.Post {
 	return predicate.Post(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -438,7 +463,7 @@ func HasEvent() predicate.Post {
 	return predicate.Post(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, EventTable, EventPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, EventTable, EventColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -461,7 +486,7 @@ func HasImages() predicate.Post {
 	return predicate.Post(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, false, ImagesTable, ImagesColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, ImagesTable, ImagesColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

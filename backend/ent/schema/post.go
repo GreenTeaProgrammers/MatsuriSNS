@@ -8,7 +8,7 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// Post schema definition.
+// Post スキーマの定義
 type Post struct {
 	ent.Schema
 }
@@ -16,6 +16,7 @@ type Post struct {
 func (Post) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("user_id"),
+		field.Int("event_id"),
 		field.String("content").NotEmpty(),
 		field.Float("location_x"),
 		field.Float("location_y"),
@@ -27,14 +28,15 @@ func (Post) Fields() []ent.Field {
 
 func (Post) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("user", User.Type). // Ensure the inverse edge matches in User
-						Ref("posts"). // Use plural for consistency
-						Field("user_id").
-						Required().
-						Unique(),
-		edge.From("event", Event.Type). // Ensure the inverse edge matches in Event
-						Ref("posts"),
-		edge.To("images", PostImage.Type). // Ensure the edge to PostImage is correct
-							Unique(),
+		edge.To("user", User.Type).
+			Unique().
+			Required().
+			Field("user_id"),
+		edge.To("event", Event.Type).
+			Unique().
+			Required().
+			Field("event_id"),
+		edge.From("images", PostImage.Type).
+			Ref("post"),
 	}
 }

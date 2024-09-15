@@ -345,31 +345,15 @@ func (c *EventClient) GetX(ctx context.Context, id int) *Event {
 	return obj
 }
 
-// QueryCreatedBy queries the created_by edge of a Event.
-func (c *EventClient) QueryCreatedBy(e *Event) *UserQuery {
+// QueryCreator queries the creator edge of a Event.
+func (c *EventClient) QueryCreator(e *Event) *UserQuery {
 	query := (&UserClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := e.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(event.Table, event.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, event.CreatedByTable, event.CreatedByColumn),
-		)
-		fromV = sqlgraph.Neighbors(e.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryPosts queries the posts edge of a Event.
-func (c *EventClient) QueryPosts(e *Event) *PostQuery {
-	query := (&PostClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := e.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(event.Table, event.FieldID, id),
-			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, event.PostsTable, event.PostsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, event.CreatorTable, event.CreatorColumn),
 		)
 		fromV = sqlgraph.Neighbors(e.driver.Dialect(), step)
 		return fromV, nil
@@ -385,7 +369,23 @@ func (c *EventClient) QueryEventAdmins(e *Event) *EventAdminQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(event.Table, event.FieldID, id),
 			sqlgraph.To(eventadmin.Table, eventadmin.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, event.EventAdminsTable, event.EventAdminsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, event.EventAdminsTable, event.EventAdminsColumn),
+		)
+		fromV = sqlgraph.Neighbors(e.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPosts queries the posts edge of a Event.
+func (c *EventClient) QueryPosts(e *Event) *PostQuery {
+	query := (&PostClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := e.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(event.Table, event.FieldID, id),
+			sqlgraph.To(post.Table, post.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, event.PostsTable, event.PostsColumn),
 		)
 		fromV = sqlgraph.Neighbors(e.driver.Dialect(), step)
 		return fromV, nil
@@ -534,7 +534,7 @@ func (c *EventAdminClient) QueryEvent(ea *EventAdmin) *EventQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(eventadmin.Table, eventadmin.FieldID, id),
 			sqlgraph.To(event.Table, event.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, eventadmin.EventTable, eventadmin.EventColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, eventadmin.EventTable, eventadmin.EventColumn),
 		)
 		fromV = sqlgraph.Neighbors(ea.driver.Dialect(), step)
 		return fromV, nil
@@ -550,7 +550,7 @@ func (c *EventAdminClient) QueryUser(ea *EventAdmin) *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(eventadmin.Table, eventadmin.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, eventadmin.UserTable, eventadmin.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, eventadmin.UserTable, eventadmin.UserColumn),
 		)
 		fromV = sqlgraph.Neighbors(ea.driver.Dialect(), step)
 		return fromV, nil
@@ -699,7 +699,7 @@ func (c *PostClient) QueryUser(po *Post) *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(post.Table, post.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, post.UserTable, post.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, post.UserTable, post.UserColumn),
 		)
 		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
 		return fromV, nil
@@ -715,7 +715,7 @@ func (c *PostClient) QueryEvent(po *Post) *EventQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(post.Table, post.FieldID, id),
 			sqlgraph.To(event.Table, event.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, post.EventTable, post.EventPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, post.EventTable, post.EventColumn),
 		)
 		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
 		return fromV, nil
@@ -731,7 +731,7 @@ func (c *PostClient) QueryImages(po *Post) *PostImageQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(post.Table, post.FieldID, id),
 			sqlgraph.To(postimage.Table, postimage.FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, false, post.ImagesTable, post.ImagesColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, post.ImagesTable, post.ImagesColumn),
 		)
 		fromV = sqlgraph.Neighbors(po.driver.Dialect(), step)
 		return fromV, nil
@@ -880,7 +880,7 @@ func (c *PostImageClient) QueryPost(pi *PostImage) *PostQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(postimage.Table, postimage.FieldID, id),
 			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, true, postimage.PostTable, postimage.PostColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, postimage.PostTable, postimage.PostColumn),
 		)
 		fromV = sqlgraph.Neighbors(pi.driver.Dialect(), step)
 		return fromV, nil
@@ -1029,7 +1029,7 @@ func (c *UserClient) QueryPosts(u *User) *PostQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.PostsTable, user.PostsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.PostsTable, user.PostsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -1037,15 +1037,15 @@ func (c *UserClient) QueryPosts(u *User) *PostQuery {
 	return query
 }
 
-// QueryEvents queries the events edge of a User.
-func (c *UserClient) QueryEvents(u *User) *EventQuery {
+// QueryCreatedEvents queries the created_events edge of a User.
+func (c *UserClient) QueryCreatedEvents(u *User) *EventQuery {
 	query := (&EventClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := u.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(event.Table, event.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.EventsTable, user.EventsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.CreatedEventsTable, user.CreatedEventsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -1061,7 +1061,7 @@ func (c *UserClient) QueryEventAdmins(u *User) *EventAdminQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(eventadmin.Table, eventadmin.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, user.EventAdminsTable, user.EventAdminsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.EventAdminsTable, user.EventAdminsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

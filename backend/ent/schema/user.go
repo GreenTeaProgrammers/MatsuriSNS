@@ -8,14 +8,13 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// User schema definition.
+// User スキーマの定義
 type User struct {
 	ent.Schema
 }
 
 func (User) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int("user_id").Unique(),
 		field.String("username").NotEmpty(),
 		field.String("email").Unique().NotEmpty(),
 		field.String("hashed_password").NotEmpty(),
@@ -26,8 +25,11 @@ func (User) Fields() []ent.Field {
 
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("posts", Post.Type),              // Matches the edge in Post
-		edge.To("events", Event.Type),            // Matches the edge in Event
-		edge.To("event_admins", EventAdmin.Type), // Matches the edge in EventAdmin
+		edge.From("posts", Post.Type).
+			Ref("user"),
+		edge.From("created_events", Event.Type).
+			Ref("creator"),
+		edge.From("event_admins", EventAdmin.Type).
+			Ref("user"),
 	}
 }

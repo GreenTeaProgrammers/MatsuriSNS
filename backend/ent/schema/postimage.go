@@ -8,7 +8,7 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// PostImage schema definition.
+// PostImage スキーマの定義
 type PostImage struct {
 	ent.Schema
 }
@@ -23,8 +23,9 @@ func (PostImage) Fields() []ent.Field {
 
 func (PostImage) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("post", Post.Type).
-			Ref("images").
-			Unique(),
+		edge.To("post", Post.Type).
+			Unique().
+			Required().
+			Field("post_id"),
 	}
 }

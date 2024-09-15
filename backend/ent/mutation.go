@@ -50,14 +50,14 @@ type EventMutation struct {
 	created_at          *time.Time
 	updated_at          *time.Time
 	clearedFields       map[string]struct{}
-	created_by          *int
-	clearedcreated_by   bool
-	posts               map[int]struct{}
-	removedposts        map[int]struct{}
-	clearedposts        bool
+	creator             *int
+	clearedcreator      bool
 	event_admins        map[int]struct{}
 	removedevent_admins map[int]struct{}
 	clearedevent_admins bool
+	posts               map[int]struct{}
+	removedposts        map[int]struct{}
+	clearedposts        bool
 	done                bool
 	oldValue            func(context.Context) (*Event, error)
 	predicates          []predicate.Event
@@ -470,115 +470,72 @@ func (m *EventMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err erro
 	return oldValue.UpdatedAt, nil
 }
 
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (m *EventMutation) ClearUpdatedAt() {
-	m.updated_at = nil
-	m.clearedFields[event.FieldUpdatedAt] = struct{}{}
-}
-
-// UpdatedAtCleared returns if the "updated_at" field was cleared in this mutation.
-func (m *EventMutation) UpdatedAtCleared() bool {
-	_, ok := m.clearedFields[event.FieldUpdatedAt]
-	return ok
-}
-
 // ResetUpdatedAt resets all changes to the "updated_at" field.
 func (m *EventMutation) ResetUpdatedAt() {
 	m.updated_at = nil
-	delete(m.clearedFields, event.FieldUpdatedAt)
 }
 
-// SetCreatedByID sets the "created_by" edge to the User entity by id.
-func (m *EventMutation) SetCreatedByID(id int) {
-	m.created_by = &id
+// SetCreatorID sets the "creator_id" field.
+func (m *EventMutation) SetCreatorID(i int) {
+	m.creator = &i
 }
 
-// ClearCreatedBy clears the "created_by" edge to the User entity.
-func (m *EventMutation) ClearCreatedBy() {
-	m.clearedcreated_by = true
-}
-
-// CreatedByCleared reports if the "created_by" edge to the User entity was cleared.
-func (m *EventMutation) CreatedByCleared() bool {
-	return m.clearedcreated_by
-}
-
-// CreatedByID returns the "created_by" edge ID in the mutation.
-func (m *EventMutation) CreatedByID() (id int, exists bool) {
-	if m.created_by != nil {
-		return *m.created_by, true
+// CreatorID returns the value of the "creator_id" field in the mutation.
+func (m *EventMutation) CreatorID() (r int, exists bool) {
+	v := m.creator
+	if v == nil {
+		return
 	}
-	return
+	return *v, true
 }
 
-// CreatedByIDs returns the "created_by" edge IDs in the mutation.
+// OldCreatorID returns the old "creator_id" field's value of the Event entity.
+// If the Event object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *EventMutation) OldCreatorID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatorID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatorID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatorID: %w", err)
+	}
+	return oldValue.CreatorID, nil
+}
+
+// ResetCreatorID resets all changes to the "creator_id" field.
+func (m *EventMutation) ResetCreatorID() {
+	m.creator = nil
+}
+
+// ClearCreator clears the "creator" edge to the User entity.
+func (m *EventMutation) ClearCreator() {
+	m.clearedcreator = true
+	m.clearedFields[event.FieldCreatorID] = struct{}{}
+}
+
+// CreatorCleared reports if the "creator" edge to the User entity was cleared.
+func (m *EventMutation) CreatorCleared() bool {
+	return m.clearedcreator
+}
+
+// CreatorIDs returns the "creator" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// CreatedByID instead. It exists only for internal usage by the builders.
-func (m *EventMutation) CreatedByIDs() (ids []int) {
-	if id := m.created_by; id != nil {
+// CreatorID instead. It exists only for internal usage by the builders.
+func (m *EventMutation) CreatorIDs() (ids []int) {
+	if id := m.creator; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetCreatedBy resets all changes to the "created_by" edge.
-func (m *EventMutation) ResetCreatedBy() {
-	m.created_by = nil
-	m.clearedcreated_by = false
-}
-
-// AddPostIDs adds the "posts" edge to the Post entity by ids.
-func (m *EventMutation) AddPostIDs(ids ...int) {
-	if m.posts == nil {
-		m.posts = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.posts[ids[i]] = struct{}{}
-	}
-}
-
-// ClearPosts clears the "posts" edge to the Post entity.
-func (m *EventMutation) ClearPosts() {
-	m.clearedposts = true
-}
-
-// PostsCleared reports if the "posts" edge to the Post entity was cleared.
-func (m *EventMutation) PostsCleared() bool {
-	return m.clearedposts
-}
-
-// RemovePostIDs removes the "posts" edge to the Post entity by IDs.
-func (m *EventMutation) RemovePostIDs(ids ...int) {
-	if m.removedposts == nil {
-		m.removedposts = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.posts, ids[i])
-		m.removedposts[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedPosts returns the removed IDs of the "posts" edge to the Post entity.
-func (m *EventMutation) RemovedPostsIDs() (ids []int) {
-	for id := range m.removedposts {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// PostsIDs returns the "posts" edge IDs in the mutation.
-func (m *EventMutation) PostsIDs() (ids []int) {
-	for id := range m.posts {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetPosts resets all changes to the "posts" edge.
-func (m *EventMutation) ResetPosts() {
-	m.posts = nil
-	m.clearedposts = false
-	m.removedposts = nil
+// ResetCreator resets all changes to the "creator" edge.
+func (m *EventMutation) ResetCreator() {
+	m.creator = nil
+	m.clearedcreator = false
 }
 
 // AddEventAdminIDs adds the "event_admins" edge to the EventAdmin entity by ids.
@@ -635,6 +592,60 @@ func (m *EventMutation) ResetEventAdmins() {
 	m.removedevent_admins = nil
 }
 
+// AddPostIDs adds the "posts" edge to the Post entity by ids.
+func (m *EventMutation) AddPostIDs(ids ...int) {
+	if m.posts == nil {
+		m.posts = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.posts[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPosts clears the "posts" edge to the Post entity.
+func (m *EventMutation) ClearPosts() {
+	m.clearedposts = true
+}
+
+// PostsCleared reports if the "posts" edge to the Post entity was cleared.
+func (m *EventMutation) PostsCleared() bool {
+	return m.clearedposts
+}
+
+// RemovePostIDs removes the "posts" edge to the Post entity by IDs.
+func (m *EventMutation) RemovePostIDs(ids ...int) {
+	if m.removedposts == nil {
+		m.removedposts = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.posts, ids[i])
+		m.removedposts[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPosts returns the removed IDs of the "posts" edge to the Post entity.
+func (m *EventMutation) RemovedPostsIDs() (ids []int) {
+	for id := range m.removedposts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PostsIDs returns the "posts" edge IDs in the mutation.
+func (m *EventMutation) PostsIDs() (ids []int) {
+	for id := range m.posts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPosts resets all changes to the "posts" edge.
+func (m *EventMutation) ResetPosts() {
+	m.posts = nil
+	m.clearedposts = false
+	m.removedposts = nil
+}
+
 // Where appends a list predicates to the EventMutation builder.
 func (m *EventMutation) Where(ps ...predicate.Event) {
 	m.predicates = append(m.predicates, ps...)
@@ -669,7 +680,7 @@ func (m *EventMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *EventMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 9)
 	if m.title != nil {
 		fields = append(fields, event.FieldTitle)
 	}
@@ -693,6 +704,9 @@ func (m *EventMutation) Fields() []string {
 	}
 	if m.updated_at != nil {
 		fields = append(fields, event.FieldUpdatedAt)
+	}
+	if m.creator != nil {
+		fields = append(fields, event.FieldCreatorID)
 	}
 	return fields
 }
@@ -718,6 +732,8 @@ func (m *EventMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case event.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case event.FieldCreatorID:
+		return m.CreatorID()
 	}
 	return nil, false
 }
@@ -743,6 +759,8 @@ func (m *EventMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldCreatedAt(ctx)
 	case event.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case event.FieldCreatorID:
+		return m.OldCreatorID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Event field %s", name)
 }
@@ -808,6 +826,13 @@ func (m *EventMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
+	case event.FieldCreatorID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatorID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Event field %s", name)
 }
@@ -815,13 +840,16 @@ func (m *EventMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *EventMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *EventMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	}
 	return nil, false
 }
 
@@ -844,9 +872,6 @@ func (m *EventMutation) ClearedFields() []string {
 	if m.FieldCleared(event.FieldQrCodeURL) {
 		fields = append(fields, event.FieldQrCodeURL)
 	}
-	if m.FieldCleared(event.FieldUpdatedAt) {
-		fields = append(fields, event.FieldUpdatedAt)
-	}
 	return fields
 }
 
@@ -866,9 +891,6 @@ func (m *EventMutation) ClearField(name string) error {
 		return nil
 	case event.FieldQrCodeURL:
 		m.ClearQrCodeURL()
-		return nil
-	case event.FieldUpdatedAt:
-		m.ClearUpdatedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Event nullable field %s", name)
@@ -902,6 +924,9 @@ func (m *EventMutation) ResetField(name string) error {
 	case event.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
+	case event.FieldCreatorID:
+		m.ResetCreatorID()
+		return nil
 	}
 	return fmt.Errorf("unknown Event field %s", name)
 }
@@ -909,14 +934,14 @@ func (m *EventMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *EventMutation) AddedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.created_by != nil {
-		edges = append(edges, event.EdgeCreatedBy)
-	}
-	if m.posts != nil {
-		edges = append(edges, event.EdgePosts)
+	if m.creator != nil {
+		edges = append(edges, event.EdgeCreator)
 	}
 	if m.event_admins != nil {
 		edges = append(edges, event.EdgeEventAdmins)
+	}
+	if m.posts != nil {
+		edges = append(edges, event.EdgePosts)
 	}
 	return edges
 }
@@ -925,19 +950,19 @@ func (m *EventMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *EventMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case event.EdgeCreatedBy:
-		if id := m.created_by; id != nil {
+	case event.EdgeCreator:
+		if id := m.creator; id != nil {
 			return []ent.Value{*id}
 		}
-	case event.EdgePosts:
-		ids := make([]ent.Value, 0, len(m.posts))
-		for id := range m.posts {
-			ids = append(ids, id)
-		}
-		return ids
 	case event.EdgeEventAdmins:
 		ids := make([]ent.Value, 0, len(m.event_admins))
 		for id := range m.event_admins {
+			ids = append(ids, id)
+		}
+		return ids
+	case event.EdgePosts:
+		ids := make([]ent.Value, 0, len(m.posts))
+		for id := range m.posts {
 			ids = append(ids, id)
 		}
 		return ids
@@ -948,11 +973,11 @@ func (m *EventMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *EventMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.removedposts != nil {
-		edges = append(edges, event.EdgePosts)
-	}
 	if m.removedevent_admins != nil {
 		edges = append(edges, event.EdgeEventAdmins)
+	}
+	if m.removedposts != nil {
+		edges = append(edges, event.EdgePosts)
 	}
 	return edges
 }
@@ -961,15 +986,15 @@ func (m *EventMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *EventMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case event.EdgePosts:
-		ids := make([]ent.Value, 0, len(m.removedposts))
-		for id := range m.removedposts {
-			ids = append(ids, id)
-		}
-		return ids
 	case event.EdgeEventAdmins:
 		ids := make([]ent.Value, 0, len(m.removedevent_admins))
 		for id := range m.removedevent_admins {
+			ids = append(ids, id)
+		}
+		return ids
+	case event.EdgePosts:
+		ids := make([]ent.Value, 0, len(m.removedposts))
+		for id := range m.removedposts {
 			ids = append(ids, id)
 		}
 		return ids
@@ -980,14 +1005,14 @@ func (m *EventMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *EventMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.clearedcreated_by {
-		edges = append(edges, event.EdgeCreatedBy)
-	}
-	if m.clearedposts {
-		edges = append(edges, event.EdgePosts)
+	if m.clearedcreator {
+		edges = append(edges, event.EdgeCreator)
 	}
 	if m.clearedevent_admins {
 		edges = append(edges, event.EdgeEventAdmins)
+	}
+	if m.clearedposts {
+		edges = append(edges, event.EdgePosts)
 	}
 	return edges
 }
@@ -996,12 +1021,12 @@ func (m *EventMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *EventMutation) EdgeCleared(name string) bool {
 	switch name {
-	case event.EdgeCreatedBy:
-		return m.clearedcreated_by
-	case event.EdgePosts:
-		return m.clearedposts
+	case event.EdgeCreator:
+		return m.clearedcreator
 	case event.EdgeEventAdmins:
 		return m.clearedevent_admins
+	case event.EdgePosts:
+		return m.clearedposts
 	}
 	return false
 }
@@ -1010,8 +1035,8 @@ func (m *EventMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *EventMutation) ClearEdge(name string) error {
 	switch name {
-	case event.EdgeCreatedBy:
-		m.ClearCreatedBy()
+	case event.EdgeCreator:
+		m.ClearCreator()
 		return nil
 	}
 	return fmt.Errorf("unknown Event unique edge %s", name)
@@ -1021,14 +1046,14 @@ func (m *EventMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *EventMutation) ResetEdge(name string) error {
 	switch name {
-	case event.EdgeCreatedBy:
-		m.ResetCreatedBy()
-		return nil
-	case event.EdgePosts:
-		m.ResetPosts()
+	case event.EdgeCreator:
+		m.ResetCreator()
 		return nil
 	case event.EdgeEventAdmins:
 		m.ResetEventAdmins()
+		return nil
+	case event.EdgePosts:
+		m.ResetPosts()
 		return nil
 	}
 	return fmt.Errorf("unknown Event edge %s", name)
@@ -1040,10 +1065,6 @@ type EventAdminMutation struct {
 	op            Op
 	typ           string
 	id            *int
-	event_id      *int
-	addevent_id   *int
-	user_id       *int
-	adduser_id    *int
 	created_at    *time.Time
 	clearedFields map[string]struct{}
 	event         *int
@@ -1155,13 +1176,12 @@ func (m *EventAdminMutation) IDs(ctx context.Context) ([]int, error) {
 
 // SetEventID sets the "event_id" field.
 func (m *EventAdminMutation) SetEventID(i int) {
-	m.event_id = &i
-	m.addevent_id = nil
+	m.event = &i
 }
 
 // EventID returns the value of the "event_id" field in the mutation.
 func (m *EventAdminMutation) EventID() (r int, exists bool) {
-	v := m.event_id
+	v := m.event
 	if v == nil {
 		return
 	}
@@ -1185,39 +1205,19 @@ func (m *EventAdminMutation) OldEventID(ctx context.Context) (v int, err error) 
 	return oldValue.EventID, nil
 }
 
-// AddEventID adds i to the "event_id" field.
-func (m *EventAdminMutation) AddEventID(i int) {
-	if m.addevent_id != nil {
-		*m.addevent_id += i
-	} else {
-		m.addevent_id = &i
-	}
-}
-
-// AddedEventID returns the value that was added to the "event_id" field in this mutation.
-func (m *EventAdminMutation) AddedEventID() (r int, exists bool) {
-	v := m.addevent_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ResetEventID resets all changes to the "event_id" field.
 func (m *EventAdminMutation) ResetEventID() {
-	m.event_id = nil
-	m.addevent_id = nil
+	m.event = nil
 }
 
 // SetUserID sets the "user_id" field.
 func (m *EventAdminMutation) SetUserID(i int) {
-	m.user_id = &i
-	m.adduser_id = nil
+	m.user = &i
 }
 
 // UserID returns the value of the "user_id" field in the mutation.
 func (m *EventAdminMutation) UserID() (r int, exists bool) {
-	v := m.user_id
+	v := m.user
 	if v == nil {
 		return
 	}
@@ -1241,28 +1241,9 @@ func (m *EventAdminMutation) OldUserID(ctx context.Context) (v int, err error) {
 	return oldValue.UserID, nil
 }
 
-// AddUserID adds i to the "user_id" field.
-func (m *EventAdminMutation) AddUserID(i int) {
-	if m.adduser_id != nil {
-		*m.adduser_id += i
-	} else {
-		m.adduser_id = &i
-	}
-}
-
-// AddedUserID returns the value that was added to the "user_id" field in this mutation.
-func (m *EventAdminMutation) AddedUserID() (r int, exists bool) {
-	v := m.adduser_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ResetUserID resets all changes to the "user_id" field.
 func (m *EventAdminMutation) ResetUserID() {
-	m.user_id = nil
-	m.adduser_id = nil
+	m.user = nil
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -1301,27 +1282,15 @@ func (m *EventAdminMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// SetEventID sets the "event" edge to the Event entity by id.
-func (m *EventAdminMutation) SetEventID(id int) {
-	m.event = &id
-}
-
 // ClearEvent clears the "event" edge to the Event entity.
 func (m *EventAdminMutation) ClearEvent() {
 	m.clearedevent = true
+	m.clearedFields[eventadmin.FieldEventID] = struct{}{}
 }
 
 // EventCleared reports if the "event" edge to the Event entity was cleared.
 func (m *EventAdminMutation) EventCleared() bool {
 	return m.clearedevent
-}
-
-// EventID returns the "event" edge ID in the mutation.
-func (m *EventAdminMutation) EventID() (id int, exists bool) {
-	if m.event != nil {
-		return *m.event, true
-	}
-	return
 }
 
 // EventIDs returns the "event" edge IDs in the mutation.
@@ -1340,27 +1309,15 @@ func (m *EventAdminMutation) ResetEvent() {
 	m.clearedevent = false
 }
 
-// SetUserID sets the "user" edge to the User entity by id.
-func (m *EventAdminMutation) SetUserID(id int) {
-	m.user = &id
-}
-
 // ClearUser clears the "user" edge to the User entity.
 func (m *EventAdminMutation) ClearUser() {
 	m.cleareduser = true
+	m.clearedFields[eventadmin.FieldUserID] = struct{}{}
 }
 
 // UserCleared reports if the "user" edge to the User entity was cleared.
 func (m *EventAdminMutation) UserCleared() bool {
 	return m.cleareduser
-}
-
-// UserID returns the "user" edge ID in the mutation.
-func (m *EventAdminMutation) UserID() (id int, exists bool) {
-	if m.user != nil {
-		return *m.user, true
-	}
-	return
 }
 
 // UserIDs returns the "user" edge IDs in the mutation.
@@ -1414,10 +1371,10 @@ func (m *EventAdminMutation) Type() string {
 // AddedFields().
 func (m *EventAdminMutation) Fields() []string {
 	fields := make([]string, 0, 3)
-	if m.event_id != nil {
+	if m.event != nil {
 		fields = append(fields, eventadmin.FieldEventID)
 	}
-	if m.user_id != nil {
+	if m.user != nil {
 		fields = append(fields, eventadmin.FieldUserID)
 	}
 	if m.created_at != nil {
@@ -1490,12 +1447,6 @@ func (m *EventAdminMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *EventAdminMutation) AddedFields() []string {
 	var fields []string
-	if m.addevent_id != nil {
-		fields = append(fields, eventadmin.FieldEventID)
-	}
-	if m.adduser_id != nil {
-		fields = append(fields, eventadmin.FieldUserID)
-	}
 	return fields
 }
 
@@ -1504,10 +1455,6 @@ func (m *EventAdminMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *EventAdminMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case eventadmin.FieldEventID:
-		return m.AddedEventID()
-	case eventadmin.FieldUserID:
-		return m.AddedUserID()
 	}
 	return nil, false
 }
@@ -1517,20 +1464,6 @@ func (m *EventAdminMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *EventAdminMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case eventadmin.FieldEventID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddEventID(v)
-		return nil
-	case eventadmin.FieldUserID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddUserID(v)
-		return nil
 	}
 	return fmt.Errorf("unknown EventAdmin numeric field %s", name)
 }
@@ -1680,10 +1613,10 @@ type PostMutation struct {
 	clearedFields map[string]struct{}
 	user          *int
 	cleareduser   bool
-	event         map[int]struct{}
-	removedevent  map[int]struct{}
+	event         *int
 	clearedevent  bool
-	images        *int
+	images        map[int]struct{}
+	removedimages map[int]struct{}
 	clearedimages bool
 	done          bool
 	oldValue      func(context.Context) (*Post, error)
@@ -1822,6 +1755,42 @@ func (m *PostMutation) OldUserID(ctx context.Context) (v int, err error) {
 // ResetUserID resets all changes to the "user_id" field.
 func (m *PostMutation) ResetUserID() {
 	m.user = nil
+}
+
+// SetEventID sets the "event_id" field.
+func (m *PostMutation) SetEventID(i int) {
+	m.event = &i
+}
+
+// EventID returns the value of the "event_id" field in the mutation.
+func (m *PostMutation) EventID() (r int, exists bool) {
+	v := m.event
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEventID returns the old "event_id" field's value of the Post entity.
+// If the Post object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostMutation) OldEventID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEventID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEventID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEventID: %w", err)
+	}
+	return oldValue.EventID, nil
+}
+
+// ResetEventID resets all changes to the "event_id" field.
+func (m *PostMutation) ResetEventID() {
+	m.event = nil
 }
 
 // SetContent sets the "content" field.
@@ -2120,19 +2089,10 @@ func (m *PostMutation) ResetUser() {
 	m.cleareduser = false
 }
 
-// AddEventIDs adds the "event" edge to the Event entity by ids.
-func (m *PostMutation) AddEventIDs(ids ...int) {
-	if m.event == nil {
-		m.event = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.event[ids[i]] = struct{}{}
-	}
-}
-
 // ClearEvent clears the "event" edge to the Event entity.
 func (m *PostMutation) ClearEvent() {
 	m.clearedevent = true
+	m.clearedFields[post.FieldEventID] = struct{}{}
 }
 
 // EventCleared reports if the "event" edge to the Event entity was cleared.
@@ -2140,29 +2100,12 @@ func (m *PostMutation) EventCleared() bool {
 	return m.clearedevent
 }
 
-// RemoveEventIDs removes the "event" edge to the Event entity by IDs.
-func (m *PostMutation) RemoveEventIDs(ids ...int) {
-	if m.removedevent == nil {
-		m.removedevent = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.event, ids[i])
-		m.removedevent[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedEvent returns the removed IDs of the "event" edge to the Event entity.
-func (m *PostMutation) RemovedEventIDs() (ids []int) {
-	for id := range m.removedevent {
-		ids = append(ids, id)
-	}
-	return
-}
-
 // EventIDs returns the "event" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// EventID instead. It exists only for internal usage by the builders.
 func (m *PostMutation) EventIDs() (ids []int) {
-	for id := range m.event {
-		ids = append(ids, id)
+	if id := m.event; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -2171,12 +2114,16 @@ func (m *PostMutation) EventIDs() (ids []int) {
 func (m *PostMutation) ResetEvent() {
 	m.event = nil
 	m.clearedevent = false
-	m.removedevent = nil
 }
 
-// SetImagesID sets the "images" edge to the PostImage entity by id.
-func (m *PostMutation) SetImagesID(id int) {
-	m.images = &id
+// AddImageIDs adds the "images" edge to the PostImage entity by ids.
+func (m *PostMutation) AddImageIDs(ids ...int) {
+	if m.images == nil {
+		m.images = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.images[ids[i]] = struct{}{}
+	}
 }
 
 // ClearImages clears the "images" edge to the PostImage entity.
@@ -2189,20 +2136,29 @@ func (m *PostMutation) ImagesCleared() bool {
 	return m.clearedimages
 }
 
-// ImagesID returns the "images" edge ID in the mutation.
-func (m *PostMutation) ImagesID() (id int, exists bool) {
-	if m.images != nil {
-		return *m.images, true
+// RemoveImageIDs removes the "images" edge to the PostImage entity by IDs.
+func (m *PostMutation) RemoveImageIDs(ids ...int) {
+	if m.removedimages == nil {
+		m.removedimages = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.images, ids[i])
+		m.removedimages[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedImages returns the removed IDs of the "images" edge to the PostImage entity.
+func (m *PostMutation) RemovedImagesIDs() (ids []int) {
+	for id := range m.removedimages {
+		ids = append(ids, id)
 	}
 	return
 }
 
 // ImagesIDs returns the "images" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// ImagesID instead. It exists only for internal usage by the builders.
 func (m *PostMutation) ImagesIDs() (ids []int) {
-	if id := m.images; id != nil {
-		ids = append(ids, *id)
+	for id := range m.images {
+		ids = append(ids, id)
 	}
 	return
 }
@@ -2211,6 +2167,7 @@ func (m *PostMutation) ImagesIDs() (ids []int) {
 func (m *PostMutation) ResetImages() {
 	m.images = nil
 	m.clearedimages = false
+	m.removedimages = nil
 }
 
 // Where appends a list predicates to the PostMutation builder.
@@ -2247,9 +2204,12 @@ func (m *PostMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PostMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 8)
 	if m.user != nil {
 		fields = append(fields, post.FieldUserID)
+	}
+	if m.event != nil {
+		fields = append(fields, post.FieldEventID)
 	}
 	if m.content != nil {
 		fields = append(fields, post.FieldContent)
@@ -2279,6 +2239,8 @@ func (m *PostMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case post.FieldUserID:
 		return m.UserID()
+	case post.FieldEventID:
+		return m.EventID()
 	case post.FieldContent:
 		return m.Content()
 	case post.FieldLocationX:
@@ -2302,6 +2264,8 @@ func (m *PostMutation) OldField(ctx context.Context, name string) (ent.Value, er
 	switch name {
 	case post.FieldUserID:
 		return m.OldUserID(ctx)
+	case post.FieldEventID:
+		return m.OldEventID(ctx)
 	case post.FieldContent:
 		return m.OldContent(ctx)
 	case post.FieldLocationX:
@@ -2329,6 +2293,13 @@ func (m *PostMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUserID(v)
+		return nil
+	case post.FieldEventID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEventID(v)
 		return nil
 	case post.FieldContent:
 		v, ok := value.(string)
@@ -2460,6 +2431,9 @@ func (m *PostMutation) ResetField(name string) error {
 	case post.FieldUserID:
 		m.ResetUserID()
 		return nil
+	case post.FieldEventID:
+		m.ResetEventID()
+		return nil
 	case post.FieldContent:
 		m.ResetContent()
 		return nil
@@ -2506,15 +2480,15 @@ func (m *PostMutation) AddedIDs(name string) []ent.Value {
 			return []ent.Value{*id}
 		}
 	case post.EdgeEvent:
-		ids := make([]ent.Value, 0, len(m.event))
-		for id := range m.event {
+		if id := m.event; id != nil {
+			return []ent.Value{*id}
+		}
+	case post.EdgeImages:
+		ids := make([]ent.Value, 0, len(m.images))
+		for id := range m.images {
 			ids = append(ids, id)
 		}
 		return ids
-	case post.EdgeImages:
-		if id := m.images; id != nil {
-			return []ent.Value{*id}
-		}
 	}
 	return nil
 }
@@ -2522,8 +2496,8 @@ func (m *PostMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *PostMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.removedevent != nil {
-		edges = append(edges, post.EdgeEvent)
+	if m.removedimages != nil {
+		edges = append(edges, post.EdgeImages)
 	}
 	return edges
 }
@@ -2532,9 +2506,9 @@ func (m *PostMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *PostMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case post.EdgeEvent:
-		ids := make([]ent.Value, 0, len(m.removedevent))
-		for id := range m.removedevent {
+	case post.EdgeImages:
+		ids := make([]ent.Value, 0, len(m.removedimages))
+		for id := range m.removedimages {
 			ids = append(ids, id)
 		}
 		return ids
@@ -2578,8 +2552,8 @@ func (m *PostMutation) ClearEdge(name string) error {
 	case post.EdgeUser:
 		m.ClearUser()
 		return nil
-	case post.EdgeImages:
-		m.ClearImages()
+	case post.EdgeEvent:
+		m.ClearEvent()
 		return nil
 	}
 	return fmt.Errorf("unknown Post unique edge %s", name)
@@ -2608,8 +2582,6 @@ type PostImageMutation struct {
 	op            Op
 	typ           string
 	id            *int
-	post_id       *int
-	addpost_id    *int
 	image_url     *string
 	created_at    *time.Time
 	clearedFields map[string]struct{}
@@ -2720,13 +2692,12 @@ func (m *PostImageMutation) IDs(ctx context.Context) ([]int, error) {
 
 // SetPostID sets the "post_id" field.
 func (m *PostImageMutation) SetPostID(i int) {
-	m.post_id = &i
-	m.addpost_id = nil
+	m.post = &i
 }
 
 // PostID returns the value of the "post_id" field in the mutation.
 func (m *PostImageMutation) PostID() (r int, exists bool) {
-	v := m.post_id
+	v := m.post
 	if v == nil {
 		return
 	}
@@ -2750,28 +2721,9 @@ func (m *PostImageMutation) OldPostID(ctx context.Context) (v int, err error) {
 	return oldValue.PostID, nil
 }
 
-// AddPostID adds i to the "post_id" field.
-func (m *PostImageMutation) AddPostID(i int) {
-	if m.addpost_id != nil {
-		*m.addpost_id += i
-	} else {
-		m.addpost_id = &i
-	}
-}
-
-// AddedPostID returns the value that was added to the "post_id" field in this mutation.
-func (m *PostImageMutation) AddedPostID() (r int, exists bool) {
-	v := m.addpost_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
 // ResetPostID resets all changes to the "post_id" field.
 func (m *PostImageMutation) ResetPostID() {
-	m.post_id = nil
-	m.addpost_id = nil
+	m.post = nil
 }
 
 // SetImageURL sets the "image_url" field.
@@ -2846,27 +2798,15 @@ func (m *PostImageMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// SetPostID sets the "post" edge to the Post entity by id.
-func (m *PostImageMutation) SetPostID(id int) {
-	m.post = &id
-}
-
 // ClearPost clears the "post" edge to the Post entity.
 func (m *PostImageMutation) ClearPost() {
 	m.clearedpost = true
+	m.clearedFields[postimage.FieldPostID] = struct{}{}
 }
 
 // PostCleared reports if the "post" edge to the Post entity was cleared.
 func (m *PostImageMutation) PostCleared() bool {
 	return m.clearedpost
-}
-
-// PostID returns the "post" edge ID in the mutation.
-func (m *PostImageMutation) PostID() (id int, exists bool) {
-	if m.post != nil {
-		return *m.post, true
-	}
-	return
 }
 
 // PostIDs returns the "post" edge IDs in the mutation.
@@ -2920,7 +2860,7 @@ func (m *PostImageMutation) Type() string {
 // AddedFields().
 func (m *PostImageMutation) Fields() []string {
 	fields := make([]string, 0, 3)
-	if m.post_id != nil {
+	if m.post != nil {
 		fields = append(fields, postimage.FieldPostID)
 	}
 	if m.image_url != nil {
@@ -2996,9 +2936,6 @@ func (m *PostImageMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *PostImageMutation) AddedFields() []string {
 	var fields []string
-	if m.addpost_id != nil {
-		fields = append(fields, postimage.FieldPostID)
-	}
 	return fields
 }
 
@@ -3007,8 +2944,6 @@ func (m *PostImageMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *PostImageMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case postimage.FieldPostID:
-		return m.AddedPostID()
 	}
 	return nil, false
 }
@@ -3018,13 +2953,6 @@ func (m *PostImageMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *PostImageMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case postimage.FieldPostID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddPostID(v)
-		return nil
 	}
 	return fmt.Errorf("unknown PostImage numeric field %s", name)
 }
@@ -3142,29 +3070,27 @@ func (m *PostImageMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op                  Op
-	typ                 string
-	id                  *int
-	user_id             *int
-	adduser_id          *int
-	username            *string
-	email               *string
-	hashed_password     *string
-	created_at          *time.Time
-	updated_at          *time.Time
-	clearedFields       map[string]struct{}
-	posts               map[int]struct{}
-	removedposts        map[int]struct{}
-	clearedposts        bool
-	events              map[int]struct{}
-	removedevents       map[int]struct{}
-	clearedevents       bool
-	event_admins        map[int]struct{}
-	removedevent_admins map[int]struct{}
-	clearedevent_admins bool
-	done                bool
-	oldValue            func(context.Context) (*User, error)
-	predicates          []predicate.User
+	op                    Op
+	typ                   string
+	id                    *int
+	username              *string
+	email                 *string
+	hashed_password       *string
+	created_at            *time.Time
+	updated_at            *time.Time
+	clearedFields         map[string]struct{}
+	posts                 map[int]struct{}
+	removedposts          map[int]struct{}
+	clearedposts          bool
+	created_events        map[int]struct{}
+	removedcreated_events map[int]struct{}
+	clearedcreated_events bool
+	event_admins          map[int]struct{}
+	removedevent_admins   map[int]struct{}
+	clearedevent_admins   bool
+	done                  bool
+	oldValue              func(context.Context) (*User, error)
+	predicates            []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -3263,62 +3189,6 @@ func (m *UserMutation) IDs(ctx context.Context) ([]int, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
-}
-
-// SetUserID sets the "user_id" field.
-func (m *UserMutation) SetUserID(i int) {
-	m.user_id = &i
-	m.adduser_id = nil
-}
-
-// UserID returns the value of the "user_id" field in the mutation.
-func (m *UserMutation) UserID() (r int, exists bool) {
-	v := m.user_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldUserID returns the old "user_id" field's value of the User entity.
-// If the User object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldUserID(ctx context.Context) (v int, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldUserID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
-	}
-	return oldValue.UserID, nil
-}
-
-// AddUserID adds i to the "user_id" field.
-func (m *UserMutation) AddUserID(i int) {
-	if m.adduser_id != nil {
-		*m.adduser_id += i
-	} else {
-		m.adduser_id = &i
-	}
-}
-
-// AddedUserID returns the value that was added to the "user_id" field in this mutation.
-func (m *UserMutation) AddedUserID() (r int, exists bool) {
-	v := m.adduser_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetUserID resets all changes to the "user_id" field.
-func (m *UserMutation) ResetUserID() {
-	m.user_id = nil
-	m.adduser_id = nil
 }
 
 // SetUsername sets the "username" field.
@@ -3555,58 +3425,58 @@ func (m *UserMutation) ResetPosts() {
 	m.removedposts = nil
 }
 
-// AddEventIDs adds the "events" edge to the Event entity by ids.
-func (m *UserMutation) AddEventIDs(ids ...int) {
-	if m.events == nil {
-		m.events = make(map[int]struct{})
+// AddCreatedEventIDs adds the "created_events" edge to the Event entity by ids.
+func (m *UserMutation) AddCreatedEventIDs(ids ...int) {
+	if m.created_events == nil {
+		m.created_events = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.events[ids[i]] = struct{}{}
+		m.created_events[ids[i]] = struct{}{}
 	}
 }
 
-// ClearEvents clears the "events" edge to the Event entity.
-func (m *UserMutation) ClearEvents() {
-	m.clearedevents = true
+// ClearCreatedEvents clears the "created_events" edge to the Event entity.
+func (m *UserMutation) ClearCreatedEvents() {
+	m.clearedcreated_events = true
 }
 
-// EventsCleared reports if the "events" edge to the Event entity was cleared.
-func (m *UserMutation) EventsCleared() bool {
-	return m.clearedevents
+// CreatedEventsCleared reports if the "created_events" edge to the Event entity was cleared.
+func (m *UserMutation) CreatedEventsCleared() bool {
+	return m.clearedcreated_events
 }
 
-// RemoveEventIDs removes the "events" edge to the Event entity by IDs.
-func (m *UserMutation) RemoveEventIDs(ids ...int) {
-	if m.removedevents == nil {
-		m.removedevents = make(map[int]struct{})
+// RemoveCreatedEventIDs removes the "created_events" edge to the Event entity by IDs.
+func (m *UserMutation) RemoveCreatedEventIDs(ids ...int) {
+	if m.removedcreated_events == nil {
+		m.removedcreated_events = make(map[int]struct{})
 	}
 	for i := range ids {
-		delete(m.events, ids[i])
-		m.removedevents[ids[i]] = struct{}{}
+		delete(m.created_events, ids[i])
+		m.removedcreated_events[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedEvents returns the removed IDs of the "events" edge to the Event entity.
-func (m *UserMutation) RemovedEventsIDs() (ids []int) {
-	for id := range m.removedevents {
+// RemovedCreatedEvents returns the removed IDs of the "created_events" edge to the Event entity.
+func (m *UserMutation) RemovedCreatedEventsIDs() (ids []int) {
+	for id := range m.removedcreated_events {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// EventsIDs returns the "events" edge IDs in the mutation.
-func (m *UserMutation) EventsIDs() (ids []int) {
-	for id := range m.events {
+// CreatedEventsIDs returns the "created_events" edge IDs in the mutation.
+func (m *UserMutation) CreatedEventsIDs() (ids []int) {
+	for id := range m.created_events {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetEvents resets all changes to the "events" edge.
-func (m *UserMutation) ResetEvents() {
-	m.events = nil
-	m.clearedevents = false
-	m.removedevents = nil
+// ResetCreatedEvents resets all changes to the "created_events" edge.
+func (m *UserMutation) ResetCreatedEvents() {
+	m.created_events = nil
+	m.clearedcreated_events = false
+	m.removedcreated_events = nil
 }
 
 // AddEventAdminIDs adds the "event_admins" edge to the EventAdmin entity by ids.
@@ -3697,10 +3567,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 6)
-	if m.user_id != nil {
-		fields = append(fields, user.FieldUserID)
-	}
+	fields := make([]string, 0, 5)
 	if m.username != nil {
 		fields = append(fields, user.FieldUsername)
 	}
@@ -3724,8 +3591,6 @@ func (m *UserMutation) Fields() []string {
 // schema.
 func (m *UserMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case user.FieldUserID:
-		return m.UserID()
 	case user.FieldUsername:
 		return m.Username()
 	case user.FieldEmail:
@@ -3745,8 +3610,6 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case user.FieldUserID:
-		return m.OldUserID(ctx)
 	case user.FieldUsername:
 		return m.OldUsername(ctx)
 	case user.FieldEmail:
@@ -3766,13 +3629,6 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 // type.
 func (m *UserMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case user.FieldUserID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetUserID(v)
-		return nil
 	case user.FieldUsername:
 		v, ok := value.(string)
 		if !ok {
@@ -3815,21 +3671,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *UserMutation) AddedFields() []string {
-	var fields []string
-	if m.adduser_id != nil {
-		fields = append(fields, user.FieldUserID)
-	}
-	return fields
+	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *UserMutation) AddedField(name string) (ent.Value, bool) {
-	switch name {
-	case user.FieldUserID:
-		return m.AddedUserID()
-	}
 	return nil, false
 }
 
@@ -3838,13 +3686,6 @@ func (m *UserMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *UserMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case user.FieldUserID:
-		v, ok := value.(int)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddUserID(v)
-		return nil
 	}
 	return fmt.Errorf("unknown User numeric field %s", name)
 }
@@ -3872,9 +3713,6 @@ func (m *UserMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *UserMutation) ResetField(name string) error {
 	switch name {
-	case user.FieldUserID:
-		m.ResetUserID()
-		return nil
 	case user.FieldUsername:
 		m.ResetUsername()
 		return nil
@@ -3900,8 +3738,8 @@ func (m *UserMutation) AddedEdges() []string {
 	if m.posts != nil {
 		edges = append(edges, user.EdgePosts)
 	}
-	if m.events != nil {
-		edges = append(edges, user.EdgeEvents)
+	if m.created_events != nil {
+		edges = append(edges, user.EdgeCreatedEvents)
 	}
 	if m.event_admins != nil {
 		edges = append(edges, user.EdgeEventAdmins)
@@ -3919,9 +3757,9 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case user.EdgeEvents:
-		ids := make([]ent.Value, 0, len(m.events))
-		for id := range m.events {
+	case user.EdgeCreatedEvents:
+		ids := make([]ent.Value, 0, len(m.created_events))
+		for id := range m.created_events {
 			ids = append(ids, id)
 		}
 		return ids
@@ -3941,8 +3779,8 @@ func (m *UserMutation) RemovedEdges() []string {
 	if m.removedposts != nil {
 		edges = append(edges, user.EdgePosts)
 	}
-	if m.removedevents != nil {
-		edges = append(edges, user.EdgeEvents)
+	if m.removedcreated_events != nil {
+		edges = append(edges, user.EdgeCreatedEvents)
 	}
 	if m.removedevent_admins != nil {
 		edges = append(edges, user.EdgeEventAdmins)
@@ -3960,9 +3798,9 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case user.EdgeEvents:
-		ids := make([]ent.Value, 0, len(m.removedevents))
-		for id := range m.removedevents {
+	case user.EdgeCreatedEvents:
+		ids := make([]ent.Value, 0, len(m.removedcreated_events))
+		for id := range m.removedcreated_events {
 			ids = append(ids, id)
 		}
 		return ids
@@ -3982,8 +3820,8 @@ func (m *UserMutation) ClearedEdges() []string {
 	if m.clearedposts {
 		edges = append(edges, user.EdgePosts)
 	}
-	if m.clearedevents {
-		edges = append(edges, user.EdgeEvents)
+	if m.clearedcreated_events {
+		edges = append(edges, user.EdgeCreatedEvents)
 	}
 	if m.clearedevent_admins {
 		edges = append(edges, user.EdgeEventAdmins)
@@ -3997,8 +3835,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 	switch name {
 	case user.EdgePosts:
 		return m.clearedposts
-	case user.EdgeEvents:
-		return m.clearedevents
+	case user.EdgeCreatedEvents:
+		return m.clearedcreated_events
 	case user.EdgeEventAdmins:
 		return m.clearedevent_admins
 	}
@@ -4020,8 +3858,8 @@ func (m *UserMutation) ResetEdge(name string) error {
 	case user.EdgePosts:
 		m.ResetPosts()
 		return nil
-	case user.EdgeEvents:
-		m.ResetEvents()
+	case user.EdgeCreatedEvents:
+		m.ResetCreatedEvents()
 		return nil
 	case user.EdgeEventAdmins:
 		m.ResetEventAdmins()

@@ -95,6 +95,11 @@ func UpdatedAt(v time.Time) predicate.Event {
 	return predicate.Event(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// CreatorID applies equality check predicate on the "creator_id" field. It's identical to CreatorIDEQ.
+func CreatorID(v int) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldCreatorID, v))
+}
+
 // TitleEQ applies the EQ predicate on the "title" field.
 func TitleEQ(v string) predicate.Event {
 	return predicate.Event(sql.FieldEQ(FieldTitle, v))
@@ -535,54 +540,41 @@ func UpdatedAtLTE(v time.Time) predicate.Event {
 	return predicate.Event(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
-// UpdatedAtIsNil applies the IsNil predicate on the "updated_at" field.
-func UpdatedAtIsNil() predicate.Event {
-	return predicate.Event(sql.FieldIsNull(FieldUpdatedAt))
+// CreatorIDEQ applies the EQ predicate on the "creator_id" field.
+func CreatorIDEQ(v int) predicate.Event {
+	return predicate.Event(sql.FieldEQ(FieldCreatorID, v))
 }
 
-// UpdatedAtNotNil applies the NotNil predicate on the "updated_at" field.
-func UpdatedAtNotNil() predicate.Event {
-	return predicate.Event(sql.FieldNotNull(FieldUpdatedAt))
+// CreatorIDNEQ applies the NEQ predicate on the "creator_id" field.
+func CreatorIDNEQ(v int) predicate.Event {
+	return predicate.Event(sql.FieldNEQ(FieldCreatorID, v))
 }
 
-// HasCreatedBy applies the HasEdge predicate on the "created_by" edge.
-func HasCreatedBy() predicate.Event {
+// CreatorIDIn applies the In predicate on the "creator_id" field.
+func CreatorIDIn(vs ...int) predicate.Event {
+	return predicate.Event(sql.FieldIn(FieldCreatorID, vs...))
+}
+
+// CreatorIDNotIn applies the NotIn predicate on the "creator_id" field.
+func CreatorIDNotIn(vs ...int) predicate.Event {
+	return predicate.Event(sql.FieldNotIn(FieldCreatorID, vs...))
+}
+
+// HasCreator applies the HasEdge predicate on the "creator" edge.
+func HasCreator() predicate.Event {
 	return predicate.Event(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, CreatedByTable, CreatedByColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, CreatorTable, CreatorColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasCreatedByWith applies the HasEdge predicate on the "created_by" edge with a given conditions (other predicates).
-func HasCreatedByWith(preds ...predicate.User) predicate.Event {
+// HasCreatorWith applies the HasEdge predicate on the "creator" edge with a given conditions (other predicates).
+func HasCreatorWith(preds ...predicate.User) predicate.Event {
 	return predicate.Event(func(s *sql.Selector) {
-		step := newCreatedByStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasPosts applies the HasEdge predicate on the "posts" edge.
-func HasPosts() predicate.Event {
-	return predicate.Event(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, PostsTable, PostsPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasPostsWith applies the HasEdge predicate on the "posts" edge with a given conditions (other predicates).
-func HasPostsWith(preds ...predicate.Post) predicate.Event {
-	return predicate.Event(func(s *sql.Selector) {
-		step := newPostsStep()
+		step := newCreatorStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -596,7 +588,7 @@ func HasEventAdmins() predicate.Event {
 	return predicate.Event(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, EventAdminsTable, EventAdminsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, EventAdminsTable, EventAdminsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -606,6 +598,29 @@ func HasEventAdmins() predicate.Event {
 func HasEventAdminsWith(preds ...predicate.EventAdmin) predicate.Event {
 	return predicate.Event(func(s *sql.Selector) {
 		step := newEventAdminsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPosts applies the HasEdge predicate on the "posts" edge.
+func HasPosts() predicate.Event {
+	return predicate.Event(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, PostsTable, PostsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPostsWith applies the HasEdge predicate on the "posts" edge with a given conditions (other predicates).
+func HasPostsWith(preds ...predicate.Post) predicate.Event {
+	return predicate.Event(func(s *sql.Selector) {
+		step := newPostsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

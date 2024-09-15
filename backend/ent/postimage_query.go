@@ -24,7 +24,6 @@ type PostImageQuery struct {
 	inters     []Interceptor
 	predicates []predicate.PostImage
 	withPost   *PostQuery
-	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -75,7 +74,7 @@ func (piq *PostImageQuery) QueryPost() *PostQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(postimage.Table, postimage.FieldID, selector),
 			sqlgraph.To(post.Table, post.FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, true, postimage.PostTable, postimage.PostColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, postimage.PostTable, postimage.PostColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(piq.driver.Dialect(), step)
 		return fromU, nil
@@ -370,18 +369,11 @@ func (piq *PostImageQuery) prepareQuery(ctx context.Context) error {
 func (piq *PostImageQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*PostImage, error) {
 	var (
 		nodes       = []*PostImage{}
-		withFKs     = piq.withFKs
 		_spec       = piq.querySpec()
 		loadedTypes = [1]bool{
 			piq.withPost != nil,
 		}
 	)
-	if piq.withPost != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, postimage.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*PostImage).scanValues(nil, columns)
 	}
@@ -413,10 +405,7 @@ func (piq *PostImageQuery) loadPost(ctx context.Context, query *PostQuery, nodes
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*PostImage)
 	for i := range nodes {
-		if nodes[i].post_images == nil {
-			continue
-		}
-		fk := *nodes[i].post_images
+		fk := nodes[i].PostID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -433,7 +422,7 @@ func (piq *PostImageQuery) loadPost(ctx context.Context, query *PostQuery, nodes
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "post_images" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "post_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -466,6 +455,9 @@ func (piq *PostImageQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != postimage.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if piq.withPost != nil {
+			_spec.Node.AddColumnOnce(postimage.FieldPostID)
 		}
 	}
 	if ps := piq.predicates; len(ps) > 0 {

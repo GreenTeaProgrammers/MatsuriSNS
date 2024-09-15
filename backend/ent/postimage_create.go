@@ -47,20 +47,6 @@ func (pic *PostImageCreate) SetNillableCreatedAt(t *time.Time) *PostImageCreate 
 	return pic
 }
 
-// SetPostID sets the "post" edge to the Post entity by ID.
-func (pic *PostImageCreate) SetPostID(id int) *PostImageCreate {
-	pic.mutation.SetPostID(id)
-	return pic
-}
-
-// SetNillablePostID sets the "post" edge to the Post entity by ID if the given value is not nil.
-func (pic *PostImageCreate) SetNillablePostID(id *int) *PostImageCreate {
-	if id != nil {
-		pic = pic.SetPostID(*id)
-	}
-	return pic
-}
-
 // SetPost sets the "post" edge to the Post entity.
 func (pic *PostImageCreate) SetPost(p *Post) *PostImageCreate {
 	return pic.SetPostID(p.ID)
@@ -123,6 +109,9 @@ func (pic *PostImageCreate) check() error {
 	if _, ok := pic.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "PostImage.created_at"`)}
 	}
+	if len(pic.mutation.PostIDs()) == 0 {
+		return &ValidationError{Name: "post", err: errors.New(`ent: missing required edge "PostImage.post"`)}
+	}
 	return nil
 }
 
@@ -149,10 +138,6 @@ func (pic *PostImageCreate) createSpec() (*PostImage, *sqlgraph.CreateSpec) {
 		_node = &PostImage{config: pic.config}
 		_spec = sqlgraph.NewCreateSpec(postimage.Table, sqlgraph.NewFieldSpec(postimage.FieldID, field.TypeInt))
 	)
-	if value, ok := pic.mutation.PostID(); ok {
-		_spec.SetField(postimage.FieldPostID, field.TypeInt, value)
-		_node.PostID = value
-	}
 	if value, ok := pic.mutation.ImageURL(); ok {
 		_spec.SetField(postimage.FieldImageURL, field.TypeString, value)
 		_node.ImageURL = value
@@ -163,8 +148,8 @@ func (pic *PostImageCreate) createSpec() (*PostImage, *sqlgraph.CreateSpec) {
 	}
 	if nodes := pic.mutation.PostIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2O,
-			Inverse: true,
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
 			Table:   postimage.PostTable,
 			Columns: []string{postimage.PostColumn},
 			Bidi:    false,
@@ -175,7 +160,7 @@ func (pic *PostImageCreate) createSpec() (*PostImage, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.post_images = &nodes[0]
+		_node.PostID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

@@ -90,26 +90,6 @@ func EventIDNotIn(vs ...int) predicate.EventAdmin {
 	return predicate.EventAdmin(sql.FieldNotIn(FieldEventID, vs...))
 }
 
-// EventIDGT applies the GT predicate on the "event_id" field.
-func EventIDGT(v int) predicate.EventAdmin {
-	return predicate.EventAdmin(sql.FieldGT(FieldEventID, v))
-}
-
-// EventIDGTE applies the GTE predicate on the "event_id" field.
-func EventIDGTE(v int) predicate.EventAdmin {
-	return predicate.EventAdmin(sql.FieldGTE(FieldEventID, v))
-}
-
-// EventIDLT applies the LT predicate on the "event_id" field.
-func EventIDLT(v int) predicate.EventAdmin {
-	return predicate.EventAdmin(sql.FieldLT(FieldEventID, v))
-}
-
-// EventIDLTE applies the LTE predicate on the "event_id" field.
-func EventIDLTE(v int) predicate.EventAdmin {
-	return predicate.EventAdmin(sql.FieldLTE(FieldEventID, v))
-}
-
 // UserIDEQ applies the EQ predicate on the "user_id" field.
 func UserIDEQ(v int) predicate.EventAdmin {
 	return predicate.EventAdmin(sql.FieldEQ(FieldUserID, v))
@@ -128,26 +108,6 @@ func UserIDIn(vs ...int) predicate.EventAdmin {
 // UserIDNotIn applies the NotIn predicate on the "user_id" field.
 func UserIDNotIn(vs ...int) predicate.EventAdmin {
 	return predicate.EventAdmin(sql.FieldNotIn(FieldUserID, vs...))
-}
-
-// UserIDGT applies the GT predicate on the "user_id" field.
-func UserIDGT(v int) predicate.EventAdmin {
-	return predicate.EventAdmin(sql.FieldGT(FieldUserID, v))
-}
-
-// UserIDGTE applies the GTE predicate on the "user_id" field.
-func UserIDGTE(v int) predicate.EventAdmin {
-	return predicate.EventAdmin(sql.FieldGTE(FieldUserID, v))
-}
-
-// UserIDLT applies the LT predicate on the "user_id" field.
-func UserIDLT(v int) predicate.EventAdmin {
-	return predicate.EventAdmin(sql.FieldLT(FieldUserID, v))
-}
-
-// UserIDLTE applies the LTE predicate on the "user_id" field.
-func UserIDLTE(v int) predicate.EventAdmin {
-	return predicate.EventAdmin(sql.FieldLTE(FieldUserID, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -195,7 +155,7 @@ func HasEvent() predicate.EventAdmin {
 	return predicate.EventAdmin(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, EventTable, EventColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, EventTable, EventColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -218,7 +178,7 @@ func HasUser() predicate.EventAdmin {
 	return predicate.EventAdmin(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

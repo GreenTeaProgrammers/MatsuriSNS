@@ -9,8 +9,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/event"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/post"
-	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/postimage"
 	"github.com/GreenTeaProgrammers/MatsuriSNS/ent/user"
 )
 
@@ -21,6 +21,8 @@ type Post struct {
 	ID int `json:"id,omitempty"`
 	// UserID holds the value of the "user_id" field.
 	UserID int `json:"user_id,omitempty"`
+	// EventID holds the value of the "event_id" field.
+	EventID int `json:"event_id,omitempty"`
 	// Content holds the value of the "content" field.
 	Content string `json:"content,omitempty"`
 	// LocationX holds the value of the "location_x" field.
@@ -44,9 +46,9 @@ type PostEdges struct {
 	// User holds the value of the user edge.
 	User *User `json:"user,omitempty"`
 	// Event holds the value of the event edge.
-	Event []*Event `json:"event,omitempty"`
+	Event *Event `json:"event,omitempty"`
 	// Images holds the value of the images edge.
-	Images *PostImage `json:"images,omitempty"`
+	Images []*PostImage `json:"images,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [3]bool
@@ -64,21 +66,21 @@ func (e PostEdges) UserOrErr() (*User, error) {
 }
 
 // EventOrErr returns the Event value or an error if the edge
-// was not loaded in eager-loading.
-func (e PostEdges) EventOrErr() ([]*Event, error) {
-	if e.loadedTypes[1] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e PostEdges) EventOrErr() (*Event, error) {
+	if e.Event != nil {
 		return e.Event, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: event.Label}
 	}
 	return nil, &NotLoadedError{edge: "event"}
 }
 
 // ImagesOrErr returns the Images value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e PostEdges) ImagesOrErr() (*PostImage, error) {
-	if e.Images != nil {
+// was not loaded in eager-loading.
+func (e PostEdges) ImagesOrErr() ([]*PostImage, error) {
+	if e.loadedTypes[2] {
 		return e.Images, nil
-	} else if e.loadedTypes[2] {
-		return nil, &NotFoundError{label: postimage.Label}
 	}
 	return nil, &NotLoadedError{edge: "images"}
 }
@@ -90,7 +92,7 @@ func (*Post) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case post.FieldLocationX, post.FieldLocationY:
 			values[i] = new(sql.NullFloat64)
-		case post.FieldID, post.FieldUserID:
+		case post.FieldID, post.FieldUserID, post.FieldEventID:
 			values[i] = new(sql.NullInt64)
 		case post.FieldContent, post.FieldVideoURL:
 			values[i] = new(sql.NullString)
@@ -122,6 +124,12 @@ func (po *Post) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
 				po.UserID = int(value.Int64)
+			}
+		case post.FieldEventID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field event_id", values[i])
+			} else if value.Valid {
+				po.EventID = int(value.Int64)
 			}
 		case post.FieldContent:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -212,6 +220,9 @@ func (po *Post) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", po.ID))
 	builder.WriteString("user_id=")
 	builder.WriteString(fmt.Sprintf("%v", po.UserID))
+	builder.WriteString(", ")
+	builder.WriteString("event_id=")
+	builder.WriteString(fmt.Sprintf("%v", po.EventID))
 	builder.WriteString(", ")
 	builder.WriteString("content=")
 	builder.WriteString(po.Content)

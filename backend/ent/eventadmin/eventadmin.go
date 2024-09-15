@@ -32,14 +32,14 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "event" package.
 	EventInverseTable = "events"
 	// EventColumn is the table column denoting the event relation/edge.
-	EventColumn = "event_event_admins"
+	EventColumn = "event_id"
 	// UserTable is the table that holds the user relation/edge.
 	UserTable = "event_admins"
 	// UserInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
-	UserColumn = "user_event_admins"
+	UserColumn = "user_id"
 )
 
 // Columns holds all SQL columns for eventadmin fields.
@@ -50,22 +50,10 @@ var Columns = []string{
 	FieldCreatedAt,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "event_admins"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"event_event_admins",
-	"user_event_admins",
-}
-
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -117,13 +105,13 @@ func newEventStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(EventInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, EventTable, EventColumn),
+		sqlgraph.Edge(sqlgraph.M2O, false, EventTable, EventColumn),
 	)
 }
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+		sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
 	)
 }

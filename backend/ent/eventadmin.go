@@ -27,10 +27,8 @@ type EventAdmin struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EventAdminQuery when eager-loading is set.
-	Edges              EventAdminEdges `json:"edges"`
-	event_event_admins *int
-	user_event_admins  *int
-	selectValues       sql.SelectValues
+	Edges        EventAdminEdges `json:"edges"`
+	selectValues sql.SelectValues
 }
 
 // EventAdminEdges holds the relations/edges for other nodes in the graph.
@@ -75,10 +73,6 @@ func (*EventAdmin) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case eventadmin.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
-		case eventadmin.ForeignKeys[0]: // event_event_admins
-			values[i] = new(sql.NullInt64)
-		case eventadmin.ForeignKeys[1]: // user_event_admins
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -117,20 +111,6 @@ func (ea *EventAdmin) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				ea.CreatedAt = value.Time
-			}
-		case eventadmin.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field event_event_admins", value)
-			} else if value.Valid {
-				ea.event_event_admins = new(int)
-				*ea.event_event_admins = int(value.Int64)
-			}
-		case eventadmin.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field user_event_admins", value)
-			} else if value.Valid {
-				ea.user_event_admins = new(int)
-				*ea.user_event_admins = int(value.Int64)
 			}
 		default:
 			ea.selectValues.Set(columns[i], values[i])

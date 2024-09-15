@@ -27,7 +27,6 @@ type PostImage struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PostImageQuery when eager-loading is set.
 	Edges        PostImageEdges `json:"edges"`
-	post_images  *int
 	selectValues sql.SelectValues
 }
 
@@ -62,8 +61,6 @@ func (*PostImage) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case postimage.FieldCreatedAt:
 			values[i] = new(sql.NullTime)
-		case postimage.ForeignKeys[0]: // post_images
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -102,13 +99,6 @@ func (pi *PostImage) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				pi.CreatedAt = value.Time
-			}
-		case postimage.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field post_images", value)
-			} else if value.Valid {
-				pi.post_images = new(int)
-				*pi.post_images = int(value.Int64)
 			}
 		default:
 			pi.selectValues.Set(columns[i], values[i])

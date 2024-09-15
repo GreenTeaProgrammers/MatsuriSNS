@@ -17,8 +17,6 @@ type User struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// UserID holds the value of the "user_id" field.
-	UserID int `json:"user_id,omitempty"`
 	// Username holds the value of the "username" field.
 	Username string `json:"username,omitempty"`
 	// Email holds the value of the "email" field.
@@ -39,8 +37,8 @@ type User struct {
 type UserEdges struct {
 	// Posts holds the value of the posts edge.
 	Posts []*Post `json:"posts,omitempty"`
-	// Events holds the value of the events edge.
-	Events []*Event `json:"events,omitempty"`
+	// CreatedEvents holds the value of the created_events edge.
+	CreatedEvents []*Event `json:"created_events,omitempty"`
 	// EventAdmins holds the value of the event_admins edge.
 	EventAdmins []*EventAdmin `json:"event_admins,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -57,13 +55,13 @@ func (e UserEdges) PostsOrErr() ([]*Post, error) {
 	return nil, &NotLoadedError{edge: "posts"}
 }
 
-// EventsOrErr returns the Events value or an error if the edge
+// CreatedEventsOrErr returns the CreatedEvents value or an error if the edge
 // was not loaded in eager-loading.
-func (e UserEdges) EventsOrErr() ([]*Event, error) {
+func (e UserEdges) CreatedEventsOrErr() ([]*Event, error) {
 	if e.loadedTypes[1] {
-		return e.Events, nil
+		return e.CreatedEvents, nil
 	}
-	return nil, &NotLoadedError{edge: "events"}
+	return nil, &NotLoadedError{edge: "created_events"}
 }
 
 // EventAdminsOrErr returns the EventAdmins value or an error if the edge
@@ -80,7 +78,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldID, user.FieldUserID:
+		case user.FieldID:
 			values[i] = new(sql.NullInt64)
 		case user.FieldUsername, user.FieldEmail, user.FieldHashedPassword:
 			values[i] = new(sql.NullString)
@@ -107,12 +105,6 @@ func (u *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			u.ID = int(value.Int64)
-		case user.FieldUserID:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field user_id", values[i])
-			} else if value.Valid {
-				u.UserID = int(value.Int64)
-			}
 		case user.FieldUsername:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field username", values[i])
@@ -161,9 +153,9 @@ func (u *User) QueryPosts() *PostQuery {
 	return NewUserClient(u.config).QueryPosts(u)
 }
 
-// QueryEvents queries the "events" edge of the User entity.
-func (u *User) QueryEvents() *EventQuery {
-	return NewUserClient(u.config).QueryEvents(u)
+// QueryCreatedEvents queries the "created_events" edge of the User entity.
+func (u *User) QueryCreatedEvents() *EventQuery {
+	return NewUserClient(u.config).QueryCreatedEvents(u)
 }
 
 // QueryEventAdmins queries the "event_admins" edge of the User entity.
@@ -194,9 +186,6 @@ func (u *User) String() string {
 	var builder strings.Builder
 	builder.WriteString("User(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", u.ID))
-	builder.WriteString("user_id=")
-	builder.WriteString(fmt.Sprintf("%v", u.UserID))
-	builder.WriteString(", ")
 	builder.WriteString("username=")
 	builder.WriteString(u.Username)
 	builder.WriteString(", ")

@@ -34,53 +34,54 @@ type Event struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// CreatorID holds the value of the "creator_id" field.
+	CreatorID int `json:"creator_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the EventQuery when eager-loading is set.
 	Edges        EventEdges `json:"edges"`
-	user_events  *int
 	selectValues sql.SelectValues
 }
 
 // EventEdges holds the relations/edges for other nodes in the graph.
 type EventEdges struct {
-	// CreatedBy holds the value of the created_by edge.
-	CreatedBy *User `json:"created_by,omitempty"`
-	// Posts holds the value of the posts edge.
-	Posts []*Post `json:"posts,omitempty"`
+	// Creator holds the value of the creator edge.
+	Creator *User `json:"creator,omitempty"`
 	// EventAdmins holds the value of the event_admins edge.
 	EventAdmins []*EventAdmin `json:"event_admins,omitempty"`
+	// Posts holds the value of the posts edge.
+	Posts []*Post `json:"posts,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [3]bool
 }
 
-// CreatedByOrErr returns the CreatedBy value or an error if the edge
+// CreatorOrErr returns the Creator value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e EventEdges) CreatedByOrErr() (*User, error) {
-	if e.CreatedBy != nil {
-		return e.CreatedBy, nil
+func (e EventEdges) CreatorOrErr() (*User, error) {
+	if e.Creator != nil {
+		return e.Creator, nil
 	} else if e.loadedTypes[0] {
 		return nil, &NotFoundError{label: user.Label}
 	}
-	return nil, &NotLoadedError{edge: "created_by"}
-}
-
-// PostsOrErr returns the Posts value or an error if the edge
-// was not loaded in eager-loading.
-func (e EventEdges) PostsOrErr() ([]*Post, error) {
-	if e.loadedTypes[1] {
-		return e.Posts, nil
-	}
-	return nil, &NotLoadedError{edge: "posts"}
+	return nil, &NotLoadedError{edge: "creator"}
 }
 
 // EventAdminsOrErr returns the EventAdmins value or an error if the edge
 // was not loaded in eager-loading.
 func (e EventEdges) EventAdminsOrErr() ([]*EventAdmin, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		return e.EventAdmins, nil
 	}
 	return nil, &NotLoadedError{edge: "event_admins"}
+}
+
+// PostsOrErr returns the Posts value or an error if the edge
+// was not loaded in eager-loading.
+func (e EventEdges) PostsOrErr() ([]*Post, error) {
+	if e.loadedTypes[2] {
+		return e.Posts, nil
+	}
+	return nil, &NotLoadedError{edge: "posts"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -88,14 +89,12 @@ func (*Event) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case event.FieldID:
+		case event.FieldID, event.FieldCreatorID:
 			values[i] = new(sql.NullInt64)
 		case event.FieldTitle, event.FieldDescription, event.FieldMapURL, event.FieldQrCodeURL:
 			values[i] = new(sql.NullString)
 		case event.FieldStartTime, event.FieldEndTime, event.FieldCreatedAt, event.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case event.ForeignKeys[0]: // user_events
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -165,12 +164,11 @@ func (e *Event) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				e.UpdatedAt = value.Time
 			}
-		case event.ForeignKeys[0]:
+		case event.FieldCreatorID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field user_events", value)
+				return fmt.Errorf("unexpected type %T for field creator_id", values[i])
 			} else if value.Valid {
-				e.user_events = new(int)
-				*e.user_events = int(value.Int64)
+				e.CreatorID = int(value.Int64)
 			}
 		default:
 			e.selectValues.Set(columns[i], values[i])
@@ -185,19 +183,19 @@ func (e *Event) Value(name string) (ent.Value, error) {
 	return e.selectValues.Get(name)
 }
 
-// QueryCreatedBy queries the "created_by" edge of the Event entity.
-func (e *Event) QueryCreatedBy() *UserQuery {
-	return NewEventClient(e.config).QueryCreatedBy(e)
-}
-
-// QueryPosts queries the "posts" edge of the Event entity.
-func (e *Event) QueryPosts() *PostQuery {
-	return NewEventClient(e.config).QueryPosts(e)
+// QueryCreator queries the "creator" edge of the Event entity.
+func (e *Event) QueryCreator() *UserQuery {
+	return NewEventClient(e.config).QueryCreator(e)
 }
 
 // QueryEventAdmins queries the "event_admins" edge of the Event entity.
 func (e *Event) QueryEventAdmins() *EventAdminQuery {
 	return NewEventClient(e.config).QueryEventAdmins(e)
+}
+
+// QueryPosts queries the "posts" edge of the Event entity.
+func (e *Event) QueryPosts() *PostQuery {
+	return NewEventClient(e.config).QueryPosts(e)
 }
 
 // Update returns a builder for updating this Event.
@@ -246,6 +244,9 @@ func (e *Event) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(e.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("creator_id=")
+	builder.WriteString(fmt.Sprintf("%v", e.CreatorID))
 	builder.WriteByte(')')
 	return builder.String()
 }

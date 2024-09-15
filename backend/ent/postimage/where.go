@@ -90,26 +90,6 @@ func PostIDNotIn(vs ...int) predicate.PostImage {
 	return predicate.PostImage(sql.FieldNotIn(FieldPostID, vs...))
 }
 
-// PostIDGT applies the GT predicate on the "post_id" field.
-func PostIDGT(v int) predicate.PostImage {
-	return predicate.PostImage(sql.FieldGT(FieldPostID, v))
-}
-
-// PostIDGTE applies the GTE predicate on the "post_id" field.
-func PostIDGTE(v int) predicate.PostImage {
-	return predicate.PostImage(sql.FieldGTE(FieldPostID, v))
-}
-
-// PostIDLT applies the LT predicate on the "post_id" field.
-func PostIDLT(v int) predicate.PostImage {
-	return predicate.PostImage(sql.FieldLT(FieldPostID, v))
-}
-
-// PostIDLTE applies the LTE predicate on the "post_id" field.
-func PostIDLTE(v int) predicate.PostImage {
-	return predicate.PostImage(sql.FieldLTE(FieldPostID, v))
-}
-
 // ImageURLEQ applies the EQ predicate on the "image_url" field.
 func ImageURLEQ(v string) predicate.PostImage {
 	return predicate.PostImage(sql.FieldEQ(FieldImageURL, v))
@@ -220,7 +200,7 @@ func HasPost() predicate.PostImage {
 	return predicate.PostImage(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2O, true, PostTable, PostColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, PostTable, PostColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

@@ -31,27 +31,6 @@ func (uu *UserUpdate) Where(ps ...predicate.User) *UserUpdate {
 	return uu
 }
 
-// SetUserID sets the "user_id" field.
-func (uu *UserUpdate) SetUserID(i int) *UserUpdate {
-	uu.mutation.ResetUserID()
-	uu.mutation.SetUserID(i)
-	return uu
-}
-
-// SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (uu *UserUpdate) SetNillableUserID(i *int) *UserUpdate {
-	if i != nil {
-		uu.SetUserID(*i)
-	}
-	return uu
-}
-
-// AddUserID adds i to the "user_id" field.
-func (uu *UserUpdate) AddUserID(i int) *UserUpdate {
-	uu.mutation.AddUserID(i)
-	return uu
-}
-
 // SetUsername sets the "username" field.
 func (uu *UserUpdate) SetUsername(s string) *UserUpdate {
 	uu.mutation.SetUsername(s)
@@ -115,19 +94,19 @@ func (uu *UserUpdate) AddPosts(p ...*Post) *UserUpdate {
 	return uu.AddPostIDs(ids...)
 }
 
-// AddEventIDs adds the "events" edge to the Event entity by IDs.
-func (uu *UserUpdate) AddEventIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddEventIDs(ids...)
+// AddCreatedEventIDs adds the "created_events" edge to the Event entity by IDs.
+func (uu *UserUpdate) AddCreatedEventIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddCreatedEventIDs(ids...)
 	return uu
 }
 
-// AddEvents adds the "events" edges to the Event entity.
-func (uu *UserUpdate) AddEvents(e ...*Event) *UserUpdate {
+// AddCreatedEvents adds the "created_events" edges to the Event entity.
+func (uu *UserUpdate) AddCreatedEvents(e ...*Event) *UserUpdate {
 	ids := make([]int, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
 	}
-	return uu.AddEventIDs(ids...)
+	return uu.AddCreatedEventIDs(ids...)
 }
 
 // AddEventAdminIDs adds the "event_admins" edge to the EventAdmin entity by IDs.
@@ -171,25 +150,25 @@ func (uu *UserUpdate) RemovePosts(p ...*Post) *UserUpdate {
 	return uu.RemovePostIDs(ids...)
 }
 
-// ClearEvents clears all "events" edges to the Event entity.
-func (uu *UserUpdate) ClearEvents() *UserUpdate {
-	uu.mutation.ClearEvents()
+// ClearCreatedEvents clears all "created_events" edges to the Event entity.
+func (uu *UserUpdate) ClearCreatedEvents() *UserUpdate {
+	uu.mutation.ClearCreatedEvents()
 	return uu
 }
 
-// RemoveEventIDs removes the "events" edge to Event entities by IDs.
-func (uu *UserUpdate) RemoveEventIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemoveEventIDs(ids...)
+// RemoveCreatedEventIDs removes the "created_events" edge to Event entities by IDs.
+func (uu *UserUpdate) RemoveCreatedEventIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveCreatedEventIDs(ids...)
 	return uu
 }
 
-// RemoveEvents removes "events" edges to Event entities.
-func (uu *UserUpdate) RemoveEvents(e ...*Event) *UserUpdate {
+// RemoveCreatedEvents removes "created_events" edges to Event entities.
+func (uu *UserUpdate) RemoveCreatedEvents(e ...*Event) *UserUpdate {
 	ids := make([]int, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
 	}
-	return uu.RemoveEventIDs(ids...)
+	return uu.RemoveCreatedEventIDs(ids...)
 }
 
 // ClearEventAdmins clears all "event_admins" edges to the EventAdmin entity.
@@ -281,12 +260,6 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := uu.mutation.UserID(); ok {
-		_spec.SetField(user.FieldUserID, field.TypeInt, value)
-	}
-	if value, ok := uu.mutation.AddedUserID(); ok {
-		_spec.AddField(user.FieldUserID, field.TypeInt, value)
-	}
 	if value, ok := uu.mutation.Username(); ok {
 		_spec.SetField(user.FieldUsername, field.TypeString, value)
 	}
@@ -302,7 +275,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if uu.mutation.PostsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.PostsTable,
 			Columns: []string{user.PostsColumn},
 			Bidi:    false,
@@ -315,7 +288,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := uu.mutation.RemovedPostsIDs(); len(nodes) > 0 && !uu.mutation.PostsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.PostsTable,
 			Columns: []string{user.PostsColumn},
 			Bidi:    false,
@@ -331,7 +304,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := uu.mutation.PostsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.PostsTable,
 			Columns: []string{user.PostsColumn},
 			Bidi:    false,
@@ -344,12 +317,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uu.mutation.EventsCleared() {
+	if uu.mutation.CreatedEventsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.EventsTable,
-			Columns: []string{user.EventsColumn},
+			Inverse: true,
+			Table:   user.CreatedEventsTable,
+			Columns: []string{user.CreatedEventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -357,12 +330,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.RemovedEventsIDs(); len(nodes) > 0 && !uu.mutation.EventsCleared() {
+	if nodes := uu.mutation.RemovedCreatedEventsIDs(); len(nodes) > 0 && !uu.mutation.CreatedEventsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.EventsTable,
-			Columns: []string{user.EventsColumn},
+			Inverse: true,
+			Table:   user.CreatedEventsTable,
+			Columns: []string{user.CreatedEventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -373,12 +346,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.EventsIDs(); len(nodes) > 0 {
+	if nodes := uu.mutation.CreatedEventsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.EventsTable,
-			Columns: []string{user.EventsColumn},
+			Inverse: true,
+			Table:   user.CreatedEventsTable,
+			Columns: []string{user.CreatedEventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -392,7 +365,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if uu.mutation.EventAdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.EventAdminsTable,
 			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,
@@ -405,7 +378,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := uu.mutation.RemovedEventAdminsIDs(); len(nodes) > 0 && !uu.mutation.EventAdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.EventAdminsTable,
 			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,
@@ -421,7 +394,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := uu.mutation.EventAdminsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.EventAdminsTable,
 			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,
@@ -452,27 +425,6 @@ type UserUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *UserMutation
-}
-
-// SetUserID sets the "user_id" field.
-func (uuo *UserUpdateOne) SetUserID(i int) *UserUpdateOne {
-	uuo.mutation.ResetUserID()
-	uuo.mutation.SetUserID(i)
-	return uuo
-}
-
-// SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableUserID(i *int) *UserUpdateOne {
-	if i != nil {
-		uuo.SetUserID(*i)
-	}
-	return uuo
-}
-
-// AddUserID adds i to the "user_id" field.
-func (uuo *UserUpdateOne) AddUserID(i int) *UserUpdateOne {
-	uuo.mutation.AddUserID(i)
-	return uuo
 }
 
 // SetUsername sets the "username" field.
@@ -538,19 +490,19 @@ func (uuo *UserUpdateOne) AddPosts(p ...*Post) *UserUpdateOne {
 	return uuo.AddPostIDs(ids...)
 }
 
-// AddEventIDs adds the "events" edge to the Event entity by IDs.
-func (uuo *UserUpdateOne) AddEventIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddEventIDs(ids...)
+// AddCreatedEventIDs adds the "created_events" edge to the Event entity by IDs.
+func (uuo *UserUpdateOne) AddCreatedEventIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddCreatedEventIDs(ids...)
 	return uuo
 }
 
-// AddEvents adds the "events" edges to the Event entity.
-func (uuo *UserUpdateOne) AddEvents(e ...*Event) *UserUpdateOne {
+// AddCreatedEvents adds the "created_events" edges to the Event entity.
+func (uuo *UserUpdateOne) AddCreatedEvents(e ...*Event) *UserUpdateOne {
 	ids := make([]int, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
 	}
-	return uuo.AddEventIDs(ids...)
+	return uuo.AddCreatedEventIDs(ids...)
 }
 
 // AddEventAdminIDs adds the "event_admins" edge to the EventAdmin entity by IDs.
@@ -594,25 +546,25 @@ func (uuo *UserUpdateOne) RemovePosts(p ...*Post) *UserUpdateOne {
 	return uuo.RemovePostIDs(ids...)
 }
 
-// ClearEvents clears all "events" edges to the Event entity.
-func (uuo *UserUpdateOne) ClearEvents() *UserUpdateOne {
-	uuo.mutation.ClearEvents()
+// ClearCreatedEvents clears all "created_events" edges to the Event entity.
+func (uuo *UserUpdateOne) ClearCreatedEvents() *UserUpdateOne {
+	uuo.mutation.ClearCreatedEvents()
 	return uuo
 }
 
-// RemoveEventIDs removes the "events" edge to Event entities by IDs.
-func (uuo *UserUpdateOne) RemoveEventIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemoveEventIDs(ids...)
+// RemoveCreatedEventIDs removes the "created_events" edge to Event entities by IDs.
+func (uuo *UserUpdateOne) RemoveCreatedEventIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveCreatedEventIDs(ids...)
 	return uuo
 }
 
-// RemoveEvents removes "events" edges to Event entities.
-func (uuo *UserUpdateOne) RemoveEvents(e ...*Event) *UserUpdateOne {
+// RemoveCreatedEvents removes "created_events" edges to Event entities.
+func (uuo *UserUpdateOne) RemoveCreatedEvents(e ...*Event) *UserUpdateOne {
 	ids := make([]int, len(e))
 	for i := range e {
 		ids[i] = e[i].ID
 	}
-	return uuo.RemoveEventIDs(ids...)
+	return uuo.RemoveCreatedEventIDs(ids...)
 }
 
 // ClearEventAdmins clears all "event_admins" edges to the EventAdmin entity.
@@ -734,12 +686,6 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			}
 		}
 	}
-	if value, ok := uuo.mutation.UserID(); ok {
-		_spec.SetField(user.FieldUserID, field.TypeInt, value)
-	}
-	if value, ok := uuo.mutation.AddedUserID(); ok {
-		_spec.AddField(user.FieldUserID, field.TypeInt, value)
-	}
 	if value, ok := uuo.mutation.Username(); ok {
 		_spec.SetField(user.FieldUsername, field.TypeString, value)
 	}
@@ -755,7 +701,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if uuo.mutation.PostsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.PostsTable,
 			Columns: []string{user.PostsColumn},
 			Bidi:    false,
@@ -768,7 +714,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if nodes := uuo.mutation.RemovedPostsIDs(); len(nodes) > 0 && !uuo.mutation.PostsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.PostsTable,
 			Columns: []string{user.PostsColumn},
 			Bidi:    false,
@@ -784,7 +730,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if nodes := uuo.mutation.PostsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.PostsTable,
 			Columns: []string{user.PostsColumn},
 			Bidi:    false,
@@ -797,12 +743,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uuo.mutation.EventsCleared() {
+	if uuo.mutation.CreatedEventsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.EventsTable,
-			Columns: []string{user.EventsColumn},
+			Inverse: true,
+			Table:   user.CreatedEventsTable,
+			Columns: []string{user.CreatedEventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -810,12 +756,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.RemovedEventsIDs(); len(nodes) > 0 && !uuo.mutation.EventsCleared() {
+	if nodes := uuo.mutation.RemovedCreatedEventsIDs(); len(nodes) > 0 && !uuo.mutation.CreatedEventsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.EventsTable,
-			Columns: []string{user.EventsColumn},
+			Inverse: true,
+			Table:   user.CreatedEventsTable,
+			Columns: []string{user.CreatedEventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -826,12 +772,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.EventsIDs(); len(nodes) > 0 {
+	if nodes := uuo.mutation.CreatedEventsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.EventsTable,
-			Columns: []string{user.EventsColumn},
+			Inverse: true,
+			Table:   user.CreatedEventsTable,
+			Columns: []string{user.CreatedEventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -845,7 +791,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if uuo.mutation.EventAdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.EventAdminsTable,
 			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,
@@ -858,7 +804,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if nodes := uuo.mutation.RemovedEventAdminsIDs(); len(nodes) > 0 && !uuo.mutation.EventAdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.EventAdminsTable,
 			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,
@@ -874,7 +820,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if nodes := uuo.mutation.EventAdminsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   user.EventAdminsTable,
 			Columns: []string{user.EventAdminsColumn},
 			Bidi:    false,
